@@ -1,0 +1,3808 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>King Of Eaters - 信科食堂用餐统计系统</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+    <style>
+        /* ========== 全局样式 ========== */
+        :root {
+            --primary: #FF7F00; /* 橙色唤起食欲 */
+            --secondary: #FF6347; /* 番茄红 */
+            --success: #2ecc71;
+            --warning: #f39c12;
+            --dark: #2c3e50;
+            --light: #f8f9fa;
+            --gray: #7f8c8d;
+            --light-gray: #ecf0f1;
+            --merchant: #9b59b6;
+            --appetite-orange: #FFA500;
+            --appetite-red: #E74C3C;
+            --appetite-green: #2ECC71;
+            --appetite-yellow: #F1C40F;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #fef9e7 0%, #fdebd0 100%);
+            min-height: 100vh;
+            padding: 25px;
+            color: var(--dark);
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        .container {
+            max-width: 1280px;
+            margin: 0 auto;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* ========== 背景模糊元素 ========== */
+        .bg-blur-element {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(100px);
+            z-index: -1;
+            opacity: 0.7;
+            animation: float 15s infinite ease-in-out;
+        }
+
+        .bg-blur-1 {
+            width: 350px;
+            height: 350px;
+            background: linear-gradient(135deg, #ff9a9e, #fad0c4);
+            top: 5%;
+            left: 5%;
+            animation-delay: 0s;
+        }
+
+        .bg-blur-2 {
+            width: 300px;
+            height: 300px;
+            background: linear-gradient(135deg, #ffb347, #ffcc33);
+            bottom: 10%;
+            right: 5%;
+            animation-delay: 2.5s;
+        }
+
+        .bg-blur-3 {
+            width: 250px;
+            height: 250px;
+            background: linear-gradient(135deg, #d4fc79, #96e6a1);
+            top: 50%;
+            left: 30%;
+            animation-delay: 5s;
+        }
+
+        /* ========== 头部区域 ========== */
+        header {
+            text-align: center;
+            padding: 35px 0;
+            margin-bottom: 35px;
+            background: rgba(255, 255, 255, 0.92);
+            border-radius: 28px;
+            backdrop-filter: blur(15px);
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.8);
+            position: relative;
+            overflow: hidden;
+        }
+
+        header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 5px;
+            background: linear-gradient(90deg, var(--appetite-orange), var(--appetite-red));
+        }
+
+        h1 {
+            font-size: 3rem;
+            color: var(--dark);
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 20px;
+            font-weight: 800;
+            letter-spacing: -0.5px;
+        }
+
+        .subtitle {
+            font-size: 1.25rem;
+            color: var(--gray);
+            max-width: 700px;
+            margin: 15px auto 0;
+            line-height: 1.6;
+            font-weight: 400;
+        }
+
+        /* 搜索栏样式 */
+        .search-container {
+            display: flex;
+            max-width: 600px;
+            margin: 25px auto 0;
+            position: relative;
+        }
+
+        .search-box {
+            flex: 1;
+            padding: 16px 25px;
+            border-radius: 30px;
+            border: 2px solid rgba(255, 127, 0, 0.15);
+            background: rgba(255, 255, 255, 0.9);
+            font-size: 1.1rem;
+            color: var(--dark);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.05);
+            transition: all 0.3s ease;
+            backdrop-filter: blur(5px);
+        }
+
+        .search-box:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 4px rgba(255, 127, 0, 0.2);
+        }
+
+        .search-btn {
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: transparent;
+            border: none;
+            color: var(--primary);
+            font-size: 1.3rem;
+            cursor: pointer;
+            width: 50px;
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            transition: all 0.3s ease;
+        }
+
+        .search-btn:hover {
+            background: rgba(255, 127, 0, 0.1);
+            transform: translateY(-50%) scale(1.1);
+        }
+
+        .update-time {
+            text-align: right;
+            margin: 15px 25px 0;
+            color: var(--gray);
+            font-size: 1rem;
+            background: rgba(255, 255, 255, 0.8);
+            padding: 12px 25px;
+            border-radius: 30px;
+            display: inline-block;
+            backdrop-filter: blur(5px);
+            box-shadow: 0 6px 18px rgba(0,0,0,0.05);
+            font-weight: 500;
+        }
+
+        /* ========== 角色切换 ========== */
+        .role-switcher {
+            position: absolute;
+            top: 25px;
+            right: 25px;
+            display: flex;
+            background: rgba(255, 255, 255, 0.92);
+            border-radius: 28px;
+            overflow: hidden;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.08);
+            backdrop-filter: blur(8px);
+            z-index: 10;
+            border: 1px solid rgba(255, 255, 255, 0.6);
+        }
+
+        .role-btn {
+            padding: 14px 28px;
+            font-size: 1.05rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .role-btn.user {
+            background: var(--primary);
+            color: white;
+        }
+
+        .role-btn.merchant {
+            background: transparent;
+            color: var(--merchant);
+        }
+
+        .role-btn.merchant.active {
+            background: var(--merchant);
+            color: white;
+        }
+
+        /* ========== 统计卡片 ========== */
+        .dashboard {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 30px;
+            margin-bottom: 45px;
+        }
+
+        .stats-card {
+            flex: 1;
+            min-width: 280px;
+            background: rgba(255, 255, 255, 0.92);
+            border-radius: 28px;
+            padding: 35px 30px;
+            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.08);
+            text-align: center;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            backdrop-filter: blur(15px);
+            position: relative;
+            overflow: hidden;
+            border: 1px solid rgba(255, 255, 255, 0.7);
+            will-change: transform, box-shadow;
+        }
+
+        .stats-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 20px 45px rgba(0, 0, 0, 0.15);
+        }
+
+        .stats-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 6px;
+            background: var(--primary);
+        }
+
+        .stats-icon {
+            font-size: 3.2rem;
+            margin-bottom: 25px;
+            color: var(--primary);
+            transition: transform 0.3s ease;
+        }
+
+        .stats-card:hover .stats-icon {
+            transform: scale(1.1);
+        }
+
+        .stats-title {
+            font-size: 1.15rem;
+            color: var(--gray);
+            margin-bottom: 15px;
+            font-weight: 500;
+            letter-spacing: 0.5px;
+        }
+
+        .stats-value {
+            font-size: 2.8rem;
+            font-weight: 800;
+            color: var(--dark);
+            transition: all 0.3s ease;
+            display: inline-block;
+        }
+
+        .stats-card:hover .stats-value {
+            color: var(--primary);
+        }
+
+        /* ========== "我常吃的"组件样式 ========== */
+        .my-favorites {
+            background: rgba(255, 255, 255, 0.92);
+            border-radius: 28px;
+            padding: 30px;
+            margin: 25px 0;
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.08);
+            position: relative;
+            overflow: hidden;
+            backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.7);
+        }
+
+        .my-favorites::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 6px;
+            background: linear-gradient(90deg, #e74c3c, #f39c12, #f1c40f);
+            border-radius: 28px 28px 0 0;
+        }
+
+        .favorites-title {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 25px;
+            color: var(--dark);
+        }
+
+        .favorites-title i {
+            color: #e74c3c;
+            font-size: 1.8rem;
+            background: rgba(231, 76, 60, 0.1);
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .favorites-title h2 {
+            font-size: 1.7rem;
+            font-weight: 800;
+        }
+
+        .favorites-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+        }
+
+        .favorite-slot {
+            background: rgba(248, 249, 250, 0.92);
+            border-radius: 20px;
+            padding: 25px 20px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(12px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.05);
+            border: 2px dashed #ddd;
+            cursor: pointer;
+            min-height: 180px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .favorite-slot.empty {
+            border-color: rgba(255, 127, 0, 0.3);
+        }
+
+        .favorite-slot.empty:hover {
+            background: rgba(255, 127, 0, 0.1);
+            border-color: var(--primary);
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(255, 127, 0, 0.2);
+        }
+
+        .favorite-slot.filled {
+            border: 2px solid #e74c3c;
+            background: rgba(255, 255, 255, 0.95);
+            cursor: pointer;
+        }
+
+        .favorite-slot.filled:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 30px rgba(231, 76, 60, 0.2);
+            border-color: #c0392b;
+        }
+
+        .empty-placeholder {
+            color: var(--gray);
+            font-size: 1.1rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .empty-placeholder i {
+            font-size: 2.5rem;
+            opacity: 0.6;
+        }
+
+        .favorite-window {
+            position: relative;
+            width: 100%;
+        }
+
+        .favorite-window-name {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: var(--dark);
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .favorite-window-stats {
+            color: var(--gray);
+            font-size: 0.95rem;
+            margin-bottom: 15px;
+        }
+
+        .favorite-congestion {
+            display: inline-block;
+            padding: 6px 12px;
+            border-radius: 15px;
+            font-size: 0.9rem;
+            font-weight: bold;
+        }
+
+        .remove-favorite {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            background: #e74c3c;
+            color: white;
+            border: none;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 8px rgba(231, 76, 60, 0.3);
+            z-index: 10;
+        }
+
+        .remove-favorite:hover {
+            background: #c0392b;
+            transform: scale(1.1);
+            box-shadow: 0 4px 12px rgba(231, 76, 60, 0.4);
+        }
+
+        /* 窗口选择器样式 */
+        .window-selector {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s;
+            z-index: 2000;
+            backdrop-filter: blur(10px);
+        }
+
+        .window-selector.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .selector-content {
+            background: rgba(255, 255, 255, 0.98);
+            border-radius: 32px;
+            width: 90%;
+            max-width: 700px;
+            padding: 40px;
+            position: relative;
+            transform: translateY(60px);
+            transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            max-height: 80vh;
+            overflow-y: auto;
+            backdrop-filter: blur(25px);
+            border: 1px solid rgba(255, 255, 255, 0.8);
+            box-shadow: 0 30px 70px rgba(0,0,0,0.3);
+        }
+
+        .window-selector.active .selector-content {
+            transform: translateY(0);
+        }
+
+        .close-selector {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            font-size: 1.5rem;
+            color: var(--gray);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: rgba(255, 255, 255, 0.85);
+            width: 40px;
+            height: 40px;
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(5px);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        .close-selector:hover {
+            color: var(--secondary);
+            background: rgba(255, 255, 255, 0.95);
+            transform: rotate(90deg);
+        }
+
+        .selector-header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid rgba(236, 240, 241, 0.8);
+        }
+
+        .selector-title {
+            font-size: 1.8rem;
+            color: var(--dark);
+            margin-bottom: 8px;
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .selector-subtitle {
+            color: var(--gray);
+            font-size: 1rem;
+        }
+
+        .window-options {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+        }
+
+        .window-option {
+            background: rgba(248, 249, 250, 0.75);
+            border-radius: 20px;
+            padding: 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+            position: relative;
+            backdrop-filter: blur(5px);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+        }
+
+        .window-option:hover {
+            transform: translateY(-3px);
+            border-color: rgba(255, 127, 0, 0.3);
+            box-shadow: 0 8px 25px rgba(255, 127, 0, 0.15);
+        }
+
+        .window-option.selected {
+            border-color: #e74c3c;
+            background: rgba(231, 76, 60, 0.1);
+        }
+
+        .window-option.disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            pointer-events: none;
+        }
+
+        .option-name {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: var(--dark);
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .option-stats {
+            color: var(--gray);
+            font-size: 0.9rem;
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+        }
+
+        .option-congestion {
+            text-align: center;
+        }
+
+        /* ========== 公告区域 - 缩小面积 ========== */
+        .announcement {
+            background: rgba(255, 255, 255, 0.92);
+            border-radius: 28px;
+            padding: 25px; /* 减少内边距 */
+            margin: 25px 0; /* 减少外边距 */
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.08);
+            position: relative;
+            overflow: hidden;
+            backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.7);
+        }
+
+        .announcement::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 6px;
+            background: linear-gradient(90deg, #a1c4fd, #c2e9fb, #d4fc79, #96e6a1);
+            border-radius: 28px 28px 0 0;
+        }
+
+        .announce-title {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 20px; /* 减少下边距 */
+            color: var(--dark);
+        }
+
+        .announce-title i {
+            color: var(--primary);
+            font-size: 1.8rem; /* 减小图标大小 */
+            background: rgba(255, 127, 0, 0.1);
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .announce-title h2 {
+            font-size: 1.6rem; /* 减小标题大小 */
+            font-weight: 800;
+        }
+
+        .announce-list {
+            display: flex;
+            flex-direction: column;
+            gap: 15px; /* 减少间距 */
+        }
+
+        .announce-card {
+            background: rgba(248, 249, 250, 0.92);
+            border-radius: 20px; /* 减小圆角 */
+            padding: 20px; /* 减少内边距 */
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(12px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.05);
+            border-left: 5px solid var(--merchant);
+        }
+
+        .announce-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 25px rgba(0,0,0,0.08);
+        }
+
+        .announce-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 12px; /* 减少下边距 */
+        }
+
+        .announce-window {
+            font-weight: 700;
+            color: var(--merchant);
+            font-size: 1.1rem; /* 减小字体大小 */
+            display: flex;
+            align-items: center;
+            gap: 10px; /* 减少间距 */
+        }
+
+        .announce-date {
+            color: var(--gray);
+            font-size: 0.85rem; /* 减小字体大小 */
+        }
+
+        .announce-content {
+            color: var(--dark);
+            line-height: 1.6;
+            font-size: 1rem; /* 减小字体大小 */
+            padding-right: 30px; /* 减少右边距 */
+        }
+
+        /* ========== 推荐区域 ========== */
+        .recommendation {
+            background: rgba(255, 255, 255, 0.92);
+            border-radius: 28px;
+            padding: 35px;
+            margin: 45px 0;
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.08);
+            position: relative;
+            overflow: hidden;
+            backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.7);
+        }
+
+        .recommendation::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 6px;
+            background: linear-gradient(90deg, #ff9a9e, #fad0c4, #ffb347, #ffcc33);
+            border-radius: 28px 28px 0 0;
+        }
+
+        .rec-title {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 30px;
+            color: var(--dark);
+        }
+
+        .rec-title i {
+            color: var(--secondary);
+            font-size: 2.2rem;
+            background: rgba(255, 99, 71, 0.1);
+            width: 55px;
+            height: 55px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .rec-title h2 {
+            font-size: 2rem;
+            font-weight: 800;
+        }
+
+        .rec-subtitle {
+            color: var(--gray);
+            margin-bottom: 30px;
+            font-size: 1.15rem;
+            max-width: 800px;
+            margin-left: auto;
+            margin-right: auto;
+            line-height: 1.7;
+        }
+
+        .rec-windows {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 30px;
+            justify-content: center;
+        }
+
+        .rec-card {
+            flex: 1;
+            min-width: 280px;
+            background: rgba(248, 249, 250, 0.92);
+            border-radius: 28px;
+            padding: 35px 30px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            border: 2px solid transparent;
+            cursor: pointer;
+            backdrop-filter: blur(12px);
+            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.05);
+            will-change: transform, box-shadow;
+        }
+
+        .rec-card:hover {
+            transform: translateY(-8px) scale(1.02);
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.12);
+            border-color: rgba(255, 127, 0, 0.3);
+        }
+
+        .rec-rank {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            width: 45px;
+            height: 45px;
+            background: var(--secondary);
+            color: white;
+            border-radius: 22px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 1.4rem;
+            box-shadow: 0 6px 20px rgba(255, 99, 71, 0.3);
+        }
+
+        .rec-name {
+            font-size: 1.7rem;
+            font-weight: 800;
+            margin: 20px 0 15px;
+            color: var(--dark);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            transition: color 0.3s ease;
+        }
+
+        .rec-card:hover .rec-name {
+            color: var(--primary);
+        }
+
+        .rec-total {
+            font-size: 2.5rem;
+            font-weight: 900;
+            color: var(--secondary);
+            margin: 15px 0;
+            transition: all 0.3s ease;
+        }
+
+        .rec-card:hover .rec-total {
+            transform: scale(1.1);
+        }
+
+        .rec-label {
+            color: var(--gray);
+            font-size: 1.05rem;
+            margin-bottom: 20px;
+            letter-spacing: 0.5px;
+        }
+
+        .rec-medal {
+            margin-top: 20px;
+            font-size: 3.5rem;
+            transition: transform 0.5s ease;
+        }
+
+        .rec-card:hover .rec-medal {
+            transform: rotate(10deg) scale(1.1);
+        }
+
+        .gold {
+            color: #ffd700;
+            text-shadow: 0 3px 10px rgba(255, 215, 0, 0.4);
+        }
+
+        .silver {
+            color: #c0c0c0;
+            text-shadow: 0 3px 10px rgba(192, 192, 192, 0.4);
+        }
+
+        .bronze {
+            color: #cd7f32;
+            text-shadow: 0 3px 10px rgba(205, 127, 50, 0.4);
+        }
+
+        /* ========== 拥挤度指示器 ========== */
+        .congestion {
+            display: inline-block;
+            padding: 10px 20px;
+            border-radius: 25px;
+            font-size: 1.05rem;
+            font-weight: bold;
+            margin-top: 12px;
+            backdrop-filter: blur(5px);
+            transition: all 0.3s ease;
+        }
+
+        .low-congestion {
+            background-color: rgba(46, 204, 113, 0.9);
+            color: white;
+        }
+
+        .medium-congestion {
+            background-color: rgba(243, 156, 18, 0.9);
+            color: white;
+        }
+
+        .high-congestion {
+            background-color: rgba(231, 76, 60, 0.9);
+            color: white;
+        }
+
+        /* ========== 功能区域 ========== */
+        .features {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 35px;
+            margin: 55px 0;
+        }
+
+        .feature-card {
+            background: rgba(255, 255, 255, 0.92);
+            border-radius: 28px;
+            padding: 35px;
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.08);
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.7);
+            will-change: transform, box-shadow;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.15);
+        }
+
+        .feature-title {
+            font-size: 1.7rem;
+            color: var(--dark);
+            margin-bottom: 30px;
+            display: flex;
+            align-items: center;
+            gap: 18px;
+            font-weight: 800;
+        }
+
+        .feature-title i {
+            width: 60px;
+            height: 60px;
+            background: rgba(255, 127, 0, 0.1);
+            border-radius: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.7rem;
+            color: var(--primary);
+        }
+
+        .feature-content {
+            color: var(--gray);
+            line-height: 1.7;
+            font-size: 1.1rem;
+        }
+
+        .peak-times {
+            margin-top: 30px;
+        }
+
+        .time-slot {
+            display: flex;
+            justify-content: space-between;
+            padding: 15px 0;
+            border-bottom: 1px solid #eee;
+        }
+
+        .time-label {
+            font-weight: 600;
+            color: var(--dark);
+            font-size: 1.1rem;
+        }
+
+        .time-value {
+            color: var(--secondary);
+            font-weight: bold;
+            font-size: 1.1rem;
+        }
+
+        /* ========== 食堂窗口区域 ========== */
+        .food-court-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin: 45px 0 30px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid rgba(236, 240, 241, 0.8);
+        }
+
+        .food-court-header h2 {
+            color: var(--dark);
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            font-size: 2rem;
+            font-weight: 800;
+        }
+
+        .food-court-header i {
+            color: var(--primary);
+            font-size: 2rem;
+        }
+
+        .food-court {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 35px;
+            margin-bottom: 60px;
+        }
+
+        .window-card {
+            background: rgba(255, 255, 255, 0.92);
+            border-radius: 28px;
+            overflow: hidden;
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.08);
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            cursor: pointer;
+            position: relative;
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.7);
+            will-change: transform, box-shadow;
+            opacity: 1;
+            transform: scale(1);
+            transition: all 0.4s ease;
+        }
+
+        .window-card.hidden {
+            opacity: 0.3;
+            transform: scale(0.95);
+        }
+
+        .window-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.15);
+        }
+
+        .window-image {
+            height: 220px;
+            background-size: cover;
+            background-position: center;
+            border-radius: 28px 28px 0 0;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .favorite-btn {
+            position: absolute;
+            top: 25px;
+            right: 25px;
+            background: rgba(255, 255, 255, 0.95);
+            border: none;
+            width: 45px;
+            height: 45px;
+            border-radius: 22px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            color: #ddd;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.1);
+            z-index: 10;
+        }
+
+        .favorite-btn:hover {
+            transform: scale(1.1);
+        }
+
+        .favorite-btn.active {
+            color: var(--secondary);
+        }
+
+        .popular {
+            position: absolute;
+            top: 25px;
+            right: -35px;
+            background: var(--secondary);
+            color: white;
+            padding: 10px 40px;
+            transform: rotate(45deg);
+            font-weight: bold;
+            font-size: 1rem;
+            box-shadow: 0 6px 20px rgba(231, 76, 60, 0.3);
+        }
+
+        .window-info {
+            padding: 30px;
+        }
+
+        .window-name {
+            font-size: 1.7rem;
+            font-weight: 800;
+            margin-bottom: 25px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            color: var(--dark);
+            transition: color 0.3s ease;
+        }
+
+        .highlight {
+            background-color: rgba(255, 165, 0, 0.3);
+            padding: 0 5px;
+            border-radius: 4px;
+        }
+
+        .window-card:hover .window-name {
+            color: var(--primary);
+        }
+
+        .window-stats {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 15px;
+            padding: 12px 0;
+            border-bottom: 1px dashed rgba(236, 240, 241, 0.8);
+        }
+
+        .stat-label {
+            color: var(--gray);
+            font-size: 1.1rem;
+        }
+
+        .stat-value {
+            font-weight: 700;
+            color: var(--dark);
+            font-size: 1.1rem;
+        }
+
+        /* ========== 详情模态框 ========== */
+        .detail-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s;
+            z-index: 1000;
+            backdrop-filter: blur(10px);
+        }
+
+        .detail-modal.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal-content {
+            background: rgba(255, 255, 255, 0.98);
+            border-radius: 32px;
+            width: 90%;
+            max-width: 550px;
+            padding: 40px;
+            position: relative;
+            transform: translateY(60px);
+            transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            max-height: 90vh;
+            overflow-y: auto;
+            backdrop-filter: blur(25px);
+            border: 1px solid rgba(255, 255, 255, 0.8);
+            box-shadow: 0 30px 70px rgba(0,0,0,0.3);
+        }
+
+        .detail-modal.active .modal-content {
+            transform: translateY(0);
+        }
+
+        .close-modal {
+            position: absolute;
+            top: 30px;
+            right: 30px;
+            font-size: 1.8rem;
+            color: var(--gray);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: rgba(255, 255, 255, 0.85);
+            width: 50px;
+            height: 50px;
+            border-radius: 25px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(5px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.1);
+            z-index: 10;
+        }
+
+        .close-modal:hover {
+            color: var(--secondary);
+            background: rgba(255, 255, 255, 0.95);
+            transform: rotate(90deg);
+        }
+
+        .modal-header {
+            text-align: center;
+            margin-bottom: 35px;
+            padding-bottom: 25px;
+            border-bottom: 2px solid rgba(236, 240, 241, 0.8);
+            position: relative;
+        }
+
+        .modal-header::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 25%;
+            width: 50%;
+            height: 4px;
+            background: var(--primary);
+            border-radius: 4px;
+        }
+
+        .modal-title {
+            font-size: 2.2rem;
+            color: var(--dark);
+            margin-bottom: 10px;
+            font-weight: 800;
+        }
+
+        .modal-subtitle {
+            color: var(--gray);
+            font-size: 1.1rem;
+        }
+
+        .modal-stats {
+            margin: 35px 0;
+        }
+
+        .modal-stat {
+            display: flex;
+            justify-content: space-between;
+            padding: 20px 25px;
+            margin-bottom: 20px;
+            border-radius: 20px;
+            background: rgba(248, 249, 250, 0.75);
+            backdrop-filter: blur(5px);
+            transition: transform 0.3s ease;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.05);
+        }
+
+        .modal-stat:hover {
+            transform: translateX(5px);
+        }
+
+        .modal-stat-label {
+            font-weight: 700;
+            color: var(--dark);
+            font-size: 1.1rem;
+        }
+
+        .modal-stat-value {
+            font-size: 1.7rem;
+            font-weight: 800;
+            color: var(--primary);
+        }
+
+        .trend-chart {
+            height: 200px;
+            background: rgba(248, 249, 250, 0.75);
+            border-radius: 20px;
+            margin-top: 40px;
+            padding: 25px;
+            position: relative;
+            overflow: hidden;
+            backdrop-filter: blur(5px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.05);
+        }
+
+        .chart-title {
+            text-align: center;
+            color: var(--gray);
+            margin-bottom: 25px;
+            font-size: 1.05rem;
+            font-weight: 500;
+        }
+
+        .bars {
+            display: flex;
+            align-items: flex-end;
+            justify-content: space-around;
+            height: 130px;
+            padding: 0 20px;
+        }
+
+        .bar {
+            width: 45px;
+            background: linear-gradient(to top, var(--primary), var(--success));
+            border-radius: 12px 12px 0 0;
+            position: relative;
+            transition: height 0.5s;
+            transform-origin: bottom;
+            animation: grow 0.8s ease-out forwards;
+            opacity: 0;
+            transform: scaleY(0);
+        }
+
+        .bar:nth-child(1) { animation-delay: 0.1s; }
+        .bar:nth-child(2) { animation-delay: 0.2s; }
+        .bar:nth-child(3) { animation-delay: 0.3s; }
+        .bar:nth-child(4) { animation-delay: 0.4s; }
+        .bar:nth-child(5) { animation-delay: 0.5s; }
+        .bar:nth-child(6) { animation-delay: 0.6s; }
+
+        .bar-label {
+            position: absolute;
+            bottom: -35px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 0.9rem;
+            color: var(--gray);
+            font-weight: 500;
+        }
+
+        /* ========== 评论区域 ========== */
+        .comments-section {
+            margin-top: 40px;
+            border-top: 2px solid rgba(236, 240, 241, 0.8);
+            padding-top: 30px;
+        }
+
+        .comments-title {
+            font-size: 1.7rem;
+            color: var(--dark);
+            margin-bottom: 30px;
+            display: flex;
+            align-items: center;
+            gap: 18px;
+            font-weight: 800;
+        }
+
+        .comments-title i {
+            color: var(--primary);
+            background: rgba(255, 127, 0, 0.1);
+            width: 55px;
+            height: 55px;
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+        }
+
+        .comment-form {
+            margin-bottom: 35px;
+            background: rgba(248, 249, 250, 0.75);
+            padding: 30px;
+            border-radius: 28px;
+            backdrop-filter: blur(5px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.05);
+        }
+
+        .comment-form h4 {
+            font-size: 1.4rem;
+            color: var(--dark);
+            margin-bottom: 25px;
+            font-weight: 700;
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 12px;
+            font-weight: 700;
+            color: var(--dark);
+            font-size: 1.1rem;
+        }
+
+        .form-group input, .form-group textarea {
+            width: 100%;
+            padding: 18px;
+            border: 1px solid #ddd;
+            border-radius: 20px;
+            font-size: 1.1rem;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(5px);
+            transition: all 0.3s ease;
+        }
+
+        .form-group input:focus, .form-group textarea:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 4px rgba(255, 127, 0, 0.2);
+            outline: none;
+        }
+
+        .form-group textarea {
+            min-height: 140px;
+            resize: vertical;
+        }
+
+        .btn {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 16px 35px;
+            border-radius: 20px;
+            font-size: 1.15rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(5px);
+            display: inline-flex;
+            align-items: center;
+            gap: 12px;
+            box-shadow: 0 6px 20px rgba(255, 127, 0, 0.3);
+        }
+        
+        .btn.merchant {
+            background: var(--merchant);
+            box-shadow: 0 6px 20px rgba(155, 89, 182, 0.3);
+        }
+        
+        .btn.merchant:hover {
+            background: #8e44ad;
+            box-shadow: 0 12px 25px rgba(155, 89, 182, 0.4);
+        }
+
+        .btn:hover {
+            background: #e67300;
+            transform: translateY(-3px);
+            box-shadow: 0 12px 25px rgba(255, 127, 0, 0.4);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .comments-list {
+            max-height: 400px;
+            overflow-y: auto;
+            padding-right: 15px;
+        }
+
+        .comment {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 24px;
+            padding: 25px;
+            margin-bottom: 25px;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.05);
+            border-left: 5px solid var(--primary);
+            position: relative;
+            backdrop-filter: blur(5px);
+            transition: transform 0.3s ease;
+        }
+
+        .comment:hover {
+            transform: translateX(5px);
+        }
+
+        .comment-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 18px;
+            align-items: center;
+        }
+
+        .comment-author {
+            font-weight: 800;
+            color: var(--dark);
+            font-size: 1.15rem;
+        }
+
+        .comment-date {
+            color: var(--gray);
+            font-size: 0.95rem;
+        }
+
+        .comment-content {
+            color: var(--dark);
+            line-height: 1.7;
+            font-size: 1.1rem;
+            padding-right: 50px;
+        }
+        
+        .comment-reply {
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px dashed #eee;
+            color: var(--merchant);
+            font-weight: 600;
+            font-style: italic;
+        }
+
+        .delete-comment {
+            position: absolute;
+            top: 25px;
+            right: 25px;
+            background: none;
+            border: none;
+            color: var(--secondary);
+            cursor: pointer;
+            font-size: 1.3rem;
+            opacity: 0.9;
+            transition: all 0.3s ease;
+            background: rgba(255, 255, 255, 0.85);
+            width: 40px;
+            height: 40px;
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(5px);
+            z-index: 5;
+        }
+
+        .delete-comment:hover {
+            opacity: 1;
+            background: rgba(255, 255, 255, 0.95);
+            transform: scale(1.1);
+            box-shadow: 0 6px 20px rgba(231, 76, 60, 0.3);
+        }
+
+        .no-comments {
+            text-align: center;
+            padding: 35px;
+            color: var(--gray);
+            font-style: italic;
+            font-size: 1.15rem;
+        }
+
+        /* ========== 页脚 ========== */
+        footer {
+            text-align: center;
+            padding: 40px 0;
+            color: var(--gray);
+            font-size: 1.05rem;
+            border-top: 1px solid rgba(236, 240, 241, 0.8);
+            margin-top: 30px;
+            background: rgba(255, 255, 255, 0.92);
+            border-radius: 28px;
+            backdrop-filter: blur(15px);
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.7);
+        }
+
+        /* ========== 数据库状态指示器 ========== */
+        .db-status {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            background: rgba(46, 204, 113, 0.95);
+            color: white;
+            padding: 15px 25px;
+            border-radius: 28px;
+            font-size: 1rem;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.2);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            z-index: 1001;
+            backdrop-filter: blur(5px);
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .db-status:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 30px rgba(0,0,0,0.25);
+        }
+
+        .db-status.connecting {
+            background: rgba(243, 156, 18, 0.95);
+        }
+
+        .db-status.error {
+            background: rgba(231, 76, 60, 0.95);
+        }
+        
+        /* ========== 加载动画 ========== */
+        .loader {
+            display: inline-block;
+            width: 24px;
+            height: 24px;
+            border: 3px solid rgba(255,255,255,0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        /* ========== 数据状态提示 ========== */
+        .data-status {
+            position: fixed;
+            top: 25px;
+            right: 25px;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 28px;
+            padding: 18px 25px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.2);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            z-index: 1002;
+            backdrop-filter: blur(5px);
+            transform: translateY(-120px);
+            transition: transform 0.4s ease;
+            font-weight: 600;
+            font-size: 1.05rem;
+        }
+
+        .data-status.show {
+            transform: translateY(0);
+        }
+
+        .data-status.success {
+            color: #2ecc71;
+            border-left: 5px solid #2ecc71;
+        }
+
+        .data-status.error {
+            color: #e74c3c;
+            border-left: 5px solid #e74c3c;
+        }
+        
+        /* ========== 商家端样式 ========== */
+        .merchant-section {
+            display: none;
+        }
+        
+        .merchant-section.active {
+            display: block;
+        }
+        
+        .merchant-welcome {
+            text-align: center;
+            background: rgba(155, 89, 182, 0.1);
+            padding: 35px;
+            border-radius: 28px;
+            margin-bottom: 35px;
+            backdrop-filter: blur(5px);
+            border: 1px solid rgba(155, 89, 182, 0.2);
+            position: relative;
+        }
+        
+        .merchant-welcome h2 {
+            color: var(--merchant);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 18px;
+            margin-bottom: 20px;
+            font-size: 1.8rem;
+        }
+        
+        .merchant-welcome p {
+            color: var(--dark);
+            max-width: 850px;
+            margin: 0 auto;
+            line-height: 1.7;
+            font-size: 1.1rem;
+        }
+        
+        .merchant-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 30px;
+            margin-bottom: 45px;
+        }
+        
+        .merchant-card {
+            background: rgba(255, 255, 255, 0.92);
+            border-radius: 28px;
+            padding: 35px 30px;
+            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.08);
+            text-align: center;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            backdrop-filter: blur(15px);
+            position: relative;
+            overflow: hidden;
+            border: 1px solid rgba(255, 255, 255, 0.7);
+        }
+        
+        .merchant-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 6px;
+            background: var(--merchant);
+        }
+        
+        .merchant-card .stats-icon {
+            color: var(--merchant);
+        }
+        
+        .merchant-card:hover .stats-value {
+            color: var(--merchant);
+        }
+        
+        .merchant-actions {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 35px;
+            margin: 55px 0;
+        }
+        
+        .merchant-form {
+            background: rgba(255, 255, 255, 0.92);
+            border-radius: 28px;
+            padding: 35px;
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.08);
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.7);
+        }
+        
+        .merchant-form h3 {
+            font-size: 1.7rem;
+            color: var(--merchant);
+            margin-bottom: 30px;
+            display: flex;
+            align-items: center;
+            gap: 18px;
+            font-weight: 800;
+        }
+        
+        .merchant-form h3 i {
+            width: 60px;
+            height: 60px;
+            background: rgba(155, 89, 182, 0.1);
+            border-radius: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.7rem;
+            color: var(--merchant);
+        }
+        
+        .merchant-form .form-group {
+            margin-bottom: 30px;
+        }
+        
+        /* ========== 商家窗口切换器 ========== */
+        .merchant-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 28px;
+            padding: 20px 25px;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.1);
+            backdrop-filter: blur(5px);
+        }
+        
+        .merchant-header h2 {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            color: var(--merchant);
+            font-size: 1.7rem;
+            font-weight: 800;
+        }
+        
+        .merchant-switcher {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 28px;
+            padding: 15px 25px;
+            display: flex;
+            align-items: center;
+            gap: 18px;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.1);
+        }
+        
+        .merchant-switcher label {
+            font-weight: 700;
+            color: var(--merchant);
+            font-size: 1.1rem;
+        }
+        
+        .merchant-switcher select {
+            background: rgba(255, 255, 255, 0.95);
+            border: 1px solid rgba(155, 89, 182, 0.3);
+            border-radius: 22px;
+            padding: 12px 18px;
+            font-size: 1.05rem;
+            color: var(--dark);
+            min-width: 220px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .merchant-switcher select:focus {
+            outline: none;
+            border-color: var(--merchant);
+            box-shadow: 0 0 0 4px rgba(155, 89, 182, 0.2);
+        }
+        
+        .current-window {
+            background: rgba(155, 89, 182, 0.1);
+            border-radius: 22px;
+            padding: 10px 18px;
+            font-weight: 700;
+            color: var(--merchant);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 1.1rem;
+        }
+        
+        /* ========== 动画 ========== */
+        @keyframes float {
+            0%, 100% { transform: translateY(0) translateX(0); }
+            25% { transform: translateY(-25px) translateX(20px); }
+            50% { transform: translateY(15px) translateX(-15px); }
+            75% { transform: translateY(-20px) translateX(-20px); }
+        }
+        
+        @keyframes grow {
+            to {
+                opacity: 1;
+                transform: scaleY(1);
+            }
+        }
+        
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+        
+        .pulse {
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* ========== 媒体查询 ========== */
+        @media (max-width: 992px) {
+            h1 {
+                font-size: 2.5rem;
+            }
+            
+            .stats-card {
+                min-width: calc(50% - 15px);
+            }
+            
+            .rec-card {
+                min-width: calc(50% - 15px);
+            }
+            
+            .food-court {
+                grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            }
+            
+            .favorites-grid {
+                grid-template-columns: 1fr;
+                gap: 15px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 15px;
+            }
+            
+            h1 {
+                font-size: 2.2rem;
+            }
+            
+            .stats-card {
+                min-width: 100%;
+            }
+            
+            .rec-card {
+                min-width: 100%;
+            }
+            
+            .food-court {
+                grid-template-columns: 1fr;
+            }
+            
+            .features {
+                grid-template-columns: 1fr;
+            }
+            
+            .modal-content {
+                max-height: 85vh;
+                padding: 30px;
+            }
+            
+            .bg-blur-element {
+                display: none;
+            }
+            
+            .favorites-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .window-options {
+                grid-template-columns: 1fr;
+            }
+            
+            /* 移动端圆角微调 */
+            header, .recommendation, .feature-card, .window-card, footer, .my-favorites {
+                border-radius: 24px;
+            }
+            
+            .update-time {
+                width: 100%;
+                text-align: center;
+                float: none;
+                margin-top: 20px;
+            }
+            
+            .role-switcher {
+                position: relative;
+                top: 0;
+                right: 0;
+                margin: 0 auto 20px;
+                width: 90%;
+            }
+            
+            .merchant-stats {
+                grid-template-columns: 1fr;
+            }
+            
+            .merchant-actions {
+                grid-template-columns: 1fr;
+            }
+            
+            .merchant-header {
+                flex-direction: column;
+                gap: 20px;
+                align-items: flex-start;
+            }
+            
+            .merchant-switcher {
+                width: 100%;
+                flex-direction: column;
+                align-items: flex-start;
+            }
+        }
+
+        /* ========== Magic模式特效 ========== */
+        .magic-btn {
+            position: absolute;
+            top: 25px;
+            left: 25px;
+            background: linear-gradient(135deg, #6a11cb, #2575fc, #00c6fb, #00ff95);
+            color: white;
+            border: none;
+            padding: 14px 28px;
+            border-radius: 28px;
+            font-size: 1.05rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            z-index: 10;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.2);
+            backdrop-filter: blur(8px);
+        }
+        
+        .magic-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+        }
+        
+        .magic-active {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 999;
+            animation: rainbow-border 3s linear infinite;
+        }
+        
+        @keyframes rainbow-border {
+            0% { box-shadow: 0 0 0 10px rgba(106, 17, 203, 0.7); }
+            25% { box-shadow: 0 0 0 10px rgba(37, 117, 252, 0.7); }
+            50% { box-shadow: 0 0 0 10px rgba(0, 198, 251, 0.7); }
+            75% { box-shadow: 0 0 0 10px rgba(0, 255, 149, 0.7); }
+            100% { box-shadow: 0 0 0 10px rgba(106, 17, 203, 0.7); }
+        }
+        
+        .jelly-card {
+            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), 
+                        box-shadow 0.3s ease;
+            transform-origin: center;
+            border: 1px solid rgba(255,255,255,0.5);
+            animation: jelly 0.5s ease;
+        }
+        
+        @keyframes jelly {
+            0%, 100% { transform: scale(1); }
+            25% { transform: scale(0.95); }
+            50% { transform: scale(1.05); }
+            75% { transform: scale(0.98); }
+        }
+        
+        .sortable-ghost {
+            opacity: 0.7;
+            transform: scale(0.95);
+            box-shadow: 0 0 20px rgba(255, 99, 71, 0.5);
+        }
+        
+        .sortable-chosen {
+            box-shadow: 0 0 30px rgba(37, 117, 252, 0.6);
+            z-index: 100;
+        }
+    </style>
+</head>
+<body>
+    <!-- 背景模糊元素 -->
+    <div class="bg-blur-element bg-blur-1"></div>
+    <div class="bg-blur-element bg-blur-2"></div>
+    <div class="bg-blur-element bg-blur-3"></div>
+
+    <!-- Magic模式彩虹边框效果 -->
+    <div class="magic-active" id="magicActive"></div>
+
+    <!-- 数据状态提示 -->
+    <div class="data-status" id="dataStatus">
+        <i class="fas fa-check-circle"></i>
+        <span id="statusMessage">评论已保存！</span>
+    </div>
+    
+    <div class="container">
+        <header>
+            <!-- Magic按钮 -->
+            <button class="magic-btn" id="magicBtn">
+                <i class="fas fa-wand-magic-sparkles"></i> Magic
+            </button>
+            
+            <div class="role-switcher">
+                <div class="role-btn user active">
+                    <i class="fas fa-user"></i> 用户端
+                </div>
+                <div class="role-btn merchant">
+                    <i class="fas fa-store"></i> 商家端
+                </div>
+            </div>
+            
+            <h1><i class="fas fa-utensils"></i> King Of Eaters <i class="fas fa-chart-line"></i></h1>
+            <p class="subtitle">信科食堂实时用餐人数统计系统 - 数据每分钟自动更新</p>
+            
+            <!-- 搜索功能 -->
+            <div class="search-container">
+                <input type="text" id="searchInput" class="search-box" placeholder="搜索食堂窗口名称...">
+                <button class="search-btn"><i class="fas fa-search"></i></button>
+            </div>
+            
+            <!-- 更新时间调整到header内部 -->
+            <div class="update-time">
+                最后更新时间: <span id="updateTime">--:--:--</span>
+            </div>
+        </header>
+
+        <!-- 用户端内容 -->
+        <div class="user-section">
+            <div class="dashboard">
+                <div class="stats-card">
+                    <div class="stats-icon">
+                        <i class="fas fa-users"></i>
+                    </div>
+                    <div class="stats-title">当前用餐总人数</div>
+                    <div class="stats-value" id="totalPeople">258人</div>
+                </div>
+                <div class="stats-card">
+                    <div class="stats-icon">
+                        <i class="fas fa-clock"></i>
+                    </div>
+                    <div class="stats-title">五分钟内新增人数</div>
+                    <div class="stats-value" id="fiveMinPeople">92人</div>
+                </div>
+                <div class="stats-card">
+                    <div class="stats-icon">
+                        <i class="fas fa-bolt"></i>
+                    </div>
+                    <div class="stats-title">一分钟内新增人数</div>
+                    <div class="stats-value" id="oneMinPeople">33人</div>
+                </div>
+            </div>
+
+            <!-- "我常吃的"组件 -->
+            <div class="my-favorites">
+                <div class="favorites-title">
+                    <i class="fas fa-heart"></i>
+                    <h2>我常吃的</h2>
+                </div>
+                <div class="favorites-grid" id="favoritesGrid">
+                    <!-- 常吃的窗口将通过JS动态生成 -->
+                </div>
+            </div>
+
+            <!-- 公告区域 - 已缩小 -->
+            <div class="announcement">
+                <div class="announce-title">
+                    <i class="fas fa-bullhorn"></i>
+                    <h2>今日公告</h2>
+                </div>
+                <div class="announce-list" id="announcementList">
+                    <!-- 公告将通过JS动态生成 -->
+                </div>
+            </div>
+
+            <!-- 今日推荐区域 -->
+            <div class="recommendation">
+                <div class="rec-title">
+                    <i class="fas fa-crown"></i>
+                    <h2>今日推荐窗口</h2>
+                </div>
+                <p class="rec-subtitle">根据今日用餐总人数推荐的最受欢迎食堂窗口</p>
+                <div class="rec-windows" id="recommendedWindows">
+                    <!-- 推荐窗口将通过JS动态生成 -->
+                </div>
+            </div>
+
+            <!-- 功能区域 -->
+            <div class="features">
+                <div class="feature-card">
+                    <h3 class="feature-title"><i class="fas fa-chart-bar"></i> 拥挤度分析</h3>
+                    <div class="feature-content">
+                        <p>系统根据一分钟内刷卡人数自动计算各窗口拥挤程度：</p>
+                        <ul style="margin-top: 20px; padding-left: 25px;">
+                            <li>0-3人: <span class="congestion low-congestion">空闲</span></li>
+                            <li>4-6人: <span class="congestion medium-congestion">适中</span></li>
+                            <li>7人以上: <span class="congestion high-congestion">拥挤</span></li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="feature-card">
+                    <h3 class="feature-title"><i class="fas fa-clock"></i> 用餐高峰期预测</h3>
+                    <div class="feature-content">
+                        <p>根据历史数据，今日用餐高峰期预测如下：</p>
+                        <div class="peak-times">
+                            <div class="time-slot">
+                                <span class="time-label">早餐高峰:</span>
+                                <span class="time-value">7:30 - 8:15</span>
+                            </div>
+                            <div class="time-slot">
+                                <span class="time-label">午餐高峰:</span>
+                                <span class="time-value">11:45 - 12:45</span>
+                            </div>
+                            <div class="time-slot">
+                                <span class="time-label">晚餐高峰:</span>
+                                <span class="time-value">17:30 - 18:30</span>
+                            </div>
+                        </div>
+                        <p style="margin-top: 20px; font-style: italic;">
+                            <i class="fas fa-lightbulb"></i> 建议避开高峰期用餐以减少等待时间
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="food-court-header">
+                <h2><i class="fas fa-store"></i> 所有食堂窗口实时数据</h2>
+            </div>
+
+            <div class="food-court" id="foodCourt">
+                <!-- 窗口卡片将通过JS动态生成 -->
+            </div>
+        </div>
+        
+        <!-- 商家端内容 -->
+        <div class="merchant-section">
+            <!-- 商家管理面板 -->
+            <div class="merchant-dashboard" id="merchantDashboard">
+                <div class="merchant-header">
+                    <h2><i class="fas fa-store"></i> 商家管理面板</h2>
+                    <div class="merchant-switcher">
+                        <label for="merchantSelect">切换管理窗口:</label>
+                        <select id="merchantSelect" class="form-control">
+                            <!-- 窗口选项将通过JS动态生成 -->
+                        </select>
+                        <div class="current-window">
+                            <i class="fas fa-utensils"></i>
+                            <span id="currentWindowName">未选择窗口</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="merchant-welcome">
+                    <h2><i class="fas fa-store"></i> 商家管理面板</h2>
+                    <p>欢迎使用食堂商家管理界面！您可以在这里查看窗口的详细统计数据、管理用户评论以及发布今日特惠公告。</p>
+                </div>
+                
+                <div class="merchant-stats">
+                    <div class="merchant-card">
+                        <div class="stats-icon">
+                            <i class="fas fa-users"></i>
+                        </div>
+                        <div class="stats-title">今日总服务人次</div>
+                        <div class="stats-value" id="merchantTotal">0人</div>
+                    </div>
+                    <div class="merchant-card">
+                        <div class="stats-icon">
+                            <i class="fas fa-star"></i>
+                        </div>
+                        <div class="stats-title">用户评分</div>
+                        <div class="stats-value" id="merchantRating">4.8</div>
+                    </div>
+                </div>
+                
+                <div class="merchant-actions">
+                    <div class="merchant-form">
+                        <h3><i class="fas fa-bullhorn"></i> 发布今日公告</h3>
+                        <div class="form-group">
+                            <label for="merchantNotice">公告内容</label>
+                            <textarea id="merchantNotice" placeholder="请输入今日特惠、新品推荐等信息..."></textarea>
+                        </div>
+                        <button class="btn merchant" id="publishNotice">
+                            <i class="fas fa-paper-plane"></i> 发布公告
+                        </button>
+                        <button class="btn" id="deleteNotice" style="background: var(--secondary); box-shadow: 0 6px 20px rgba(231, 76, 60, 0.3); margin-left: 15px;">
+                            <i class="fas fa-trash-alt"></i> 删除公告
+                        </button>
+                    </div>
+                    
+                    <div class="merchant-form">
+                        <h3><i class="fas fa-comments"></i> 评论管理</h3>
+                        <div class="form-group">
+                            <label for="merchantReply">回复评论</label>
+                            <textarea id="merchantReply" placeholder="请选择评论并回复..."></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label>待处理评论 <span id="pendingCount">0</span> 条</label>
+                            <div class="comments-list" id="merchantComments">
+                                <div class="no-comments">暂无待处理评论</div>
+                            </div>
+                        </div>
+                        <button class="btn merchant" id="submitReply">
+                            <i class="fas fa-reply"></i> 提交回复
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 窗口选择器模态框 -->
+        <div class="window-selector" id="windowSelector">
+            <div class="selector-content">
+                <span class="close-selector" id="closeSelector">&times;</span>
+                <div class="selector-header">
+                    <h2 class="selector-title">
+                        <i class="fas fa-heart"></i> 选择你常吃的窗口
+                    </h2>
+                    <p class="selector-subtitle">最多可选择3个窗口，点击窗口即可添加到"我常吃的"</p>
+                </div>
+                <div class="window-options" id="windowOptions">
+                    <!-- 窗口选项将通过JS动态生成 -->
+                </div>
+            </div>
+        </div>
+
+        <div class="detail-modal" id="detailModal">
+            <div class="modal-content">
+                <span class="close-modal" id="closeModal">&times;</span>
+                <div class="modal-header">
+                    <h2 class="modal-title" id="modalTitle">窗口名称</h2>
+                    <p class="modal-subtitle">实时用餐统计</p>
+                </div>
+                <div class="modal-stats">
+                    <div class="modal-stat">
+                        <span class="modal-stat-label">五分钟内刷卡人数</span>
+                        <span class="modal-stat-value" id="fiveMinValue">0人</span>
+                    </div>
+                    <div class="modal-stat">
+                        <span class="modal-stat-label">一分钟内刷卡人数</span>
+                        <span class="modal-stat-value" id="oneMinValue">0人</span>
+                    </div>
+                    <div class="modal-stat">
+                        <span class="modal-stat-label">今日用餐总人数</span>
+                        <span class="modal-stat-value" id="totalValue">0人</span>
+                    </div>
+                    <div class="modal-stat">
+                        <span class="modal-stat-label">当前拥挤程度</span>
+                        <span class="modal-stat-value" id="congestionValue">空闲</span>
+                    </div>
+                </div>
+                <div class="trend-chart">
+                    <div class="chart-title">过去30分钟用餐人数趋势</div>
+                    <div class="bars" id="trendBars">
+                        <!-- 趋势图柱形条将通过JS动态生成 -->
+                    </div>
+                </div>
+                <div style="margin-top: 25px; text-align: center;">
+                    <button id="favoriteBtn" class="btn">
+                        <i class="far fa-star"></i> 收藏此窗口
+                    </button>
+                </div>
+
+                <!-- 评论区域 -->
+                <div class="comments-section">
+                    <h3 class="comments-title">
+                        <i class="fas fa-comments"></i> 用户评价
+                    </h3>
+                    <div class="comment-form">
+                        <h4>发表评论</h4>
+                        <div class="form-group">
+                            <label for="commentName">昵称</label>
+                            <input type="text" id="commentName" placeholder="请输入您的昵称">
+                        </div>
+                        <div class="form-group">
+                            <label for="commentText">评论内容</label>
+                            <textarea id="commentText" placeholder="请输入您的评论..."></textarea>
+                        </div>
+                        <button class="btn" id="submitComment">
+                            <i class="fas fa-paper-plane"></i> 提交评论
+                        </button>
+                    </div>
+                    <div class="comments-list" id="commentsList">
+                        <!-- 评论将通过JS动态生成 -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <footer>
+            <p>King Of Eaters 信科食堂用餐统计系统 &copy; 2025 | 数据每分钟自动更新</p>
+            <p style="margin-top: 15px; font-size: 0.95rem; color: #95a5a6;">
+                <i class="fas fa-database"></i> 评论数据已本地保存，刷新页面不会丢失
+            </p>
+        </footer>
+    </div>
+
+    <!-- 数据库状态指示器 -->
+    <div class="db-status" id="dbStatus">
+        <i class="fas fa-database"></i>
+        <span>数据库已连接</span>
+    </div>
+
+    <script>
+        // ========== 数据库服务 ==========
+        class DatabaseService {
+            constructor() {
+                this.dbStatus = document.getElementById('dbStatus');
+                this.dataStatus = document.getElementById('dataStatus');
+                this.statusMessage = document.getElementById('statusMessage');
+                this.storageKey = 'canteen_windows_data';
+                this.orderKey = 'canteen_windows_order'; // 新增：保存卡片顺序的键
+                this.favoritesKey = 'canteen_my_favorites'; // 新增：保存"我常吃的"选择的键
+                this.windowsData = [];
+            }
+
+            // 模拟连接数据库
+            async connect() {
+                this.updateDbStatus('connecting', '连接数据库...');
+                
+                // 尝试从localStorage加载数据
+                const savedData = localStorage.getItem(this.storageKey);
+                
+                // 获取默认数据
+                const defaultData = this.getDefaultData();
+                
+                if (savedData) {
+                    try {
+                        const parsedData = JSON.parse(savedData);
+                        
+                        // 保留用户数据（评论、收藏、商家公告），重置用餐数据
+                        this.windowsData = defaultData.map(window => {
+                            const savedWindow = parsedData.find(w => w.id === window.id);
+                            if (savedWindow) {
+                                return {
+                                    ...window,
+                                    comments: savedWindow.comments || [],
+                                    favorite: savedWindow.favorite || false,
+                                    merchantNotice: savedWindow.merchantNotice || ""
+                                };
+                            }
+                            return window;
+                        });
+                        
+                        this.saveToLocalStorage();
+                        this.updateDbStatus('connected', '数据库已连接（本地存储）');
+                        this.showDataStatus('数据已从本地存储加载', 'success');
+                    } catch (e) {
+                        this.windowsData = defaultData;
+                        this.saveToLocalStorage();
+                        this.updateDbStatus('connected', '数据库已连接（默认数据）');
+                        this.showDataStatus('数据加载失败，使用默认数据', 'error');
+                    }
+                } else {
+                    // 如果没有保存的数据，则使用默认数据
+                    this.windowsData = defaultData;
+                    this.saveToLocalStorage();
+                    this.updateDbStatus('connected', '数据库已连接（默认数据）');
+                    this.showDataStatus('初始化默认数据', 'success');
+                }
+                
+                return true;
+            }
+
+            // 保存数据到localStorage
+            saveToLocalStorage() {
+                try {
+                    localStorage.setItem(this.storageKey, JSON.stringify(this.windowsData));
+                    return true;
+                } catch (e) {
+                    console.error('保存数据失败:', e);
+                    this.showDataStatus('保存数据失败', 'error');
+                    return false;
+                }
+            }
+
+            // 新增：保存卡片顺序
+            saveCardOrder(order) {
+                try {
+                    localStorage.setItem(this.orderKey, JSON.stringify(order));
+                    this.showDataStatus('卡片顺序已保存', 'success');
+                    return true;
+                } catch (e) {
+                    console.error('保存卡片顺序失败:', e);
+                    this.showDataStatus('保存卡片顺序失败', 'error');
+                    return false;
+                }
+            }
+
+            // 新增：获取保存的卡片顺序
+            getCardOrder() {
+                try {
+                    const savedOrder = localStorage.getItem(this.orderKey);
+                    return savedOrder ? JSON.parse(savedOrder) : null;
+                } catch (e) {
+                    console.error('获取卡片顺序失败:', e);
+                    return null;
+                }
+            }
+
+            // 新增：保存"我常吃的"选择
+            saveMyFavorites(favorites) {
+                try {
+                    localStorage.setItem(this.favoritesKey, JSON.stringify(favorites));
+                    this.showDataStatus('我常吃的已保存', 'success');
+                    return true;
+                } catch (e) {
+                    console.error('保存我常吃的失败:', e);
+                    this.showDataStatus('保存我常吃的失败', 'error');
+                    return false;
+                }
+            }
+
+            // 新增：获取"我常吃的"选择
+            getMyFavorites() {
+                try {
+                    const savedFavorites = localStorage.getItem(this.favoritesKey);
+                    return savedFavorites ? JSON.parse(savedFavorites) : [];
+                } catch (e) {
+                    console.error('获取我常吃的失败:', e);
+                    return [];
+                }
+            }
+
+            // 显示数据状态提示
+            showDataStatus(message, type) {
+                this.statusMessage.textContent = message;
+                this.dataStatus.className = `data-status show ${type}`;
+                
+                setTimeout(() => {
+                    this.dataStatus.classList.remove('show');
+                }, 3000);
+            }
+
+            // 获取所有窗口数据
+            async getAllWindows() {
+                return [...this.windowsData];
+            }
+
+            // 更新窗口数据
+            async updateWindow(windowId, data) {
+                const index = this.windowsData.findIndex(w => w.id === windowId);
+                if (index !== -1) {
+                    this.windowsData[index] = { ...this.windowsData[index], ...data };
+                    
+                    // 保存到localStorage
+                    if (this.saveToLocalStorage()) {
+                        this.showDataStatus('数据已保存', 'success');
+                    }
+                    
+                    return true;
+                }
+                return false;
+            }
+
+            // 获取默认数据
+            getDefaultData() {
+                return [
+                    {
+                        id: 1,
+                        name: "西式简餐",
+                        fiveMin: "13人",
+                        oneMin: "5人",
+                        total: "53人",
+                        totalValue: 53,
+                        image: "linear-gradient(135deg, #ff9a9e 0%, #fad0c4 100%)",
+                        popular: false,
+                        congestion: "medium",
+                        favorite: false,
+                        comments: [
+                            {
+                                id: 1,
+                                author: "美食达人",
+                                content: "非常好吃，强烈推荐！",
+                                date: "2025-5-05",
+                                reply: "感谢您的支持，我们会继续努力！"
+                            },
+                            {
+                                id: 2,
+                                author: "学生小明",
+                                content: "价格有点小贵，但味道确实不错，值得一试。",
+                                date: "2025-5-04"
+                            }
+                        ],
+                        merchantNotice: "今日特惠：所有套餐减2元，欢迎品尝！"
+                    },
+                    {
+                        id: 2,
+                        name: "武圣羊汤",
+                        fiveMin: "15人",
+                        oneMin: "9人",
+                        total: "58人",
+                        totalValue: 58,
+                        image: "linear-gradient(135deg, #a1c4fd 0%, #c2e9fb 100%)",
+                        popular: true,
+                        congestion: "high",
+                        favorite: false,
+                        comments: [
+                            {
+                                id: 1,
+                                author: "汤品爱好者",
+                                content: "羊汤非常鲜美，冬天来一碗特别暖胃！",
+                                date: "2025-1-05"
+                            },
+                            {
+                                id: 2,
+                                author: "小李同学",
+                                content: "羊肉分量很足，汤底浓郁，就是排队时间有点长。",
+                                date: "2025-5-03"
+                            }
+                        ],
+                        merchantNotice: "新品上市：特色羊肉泡馍，欢迎品尝！"
+                    },
+                    {
+                        id: 3,
+                        name: "醉面",
+                        fiveMin: "11人",
+                        oneMin: "3人",
+                        total: "36人",
+                        totalValue: 36,
+                        image: "linear-gradient(135deg, #d4fc79 0%, #96e6a1 100%)",
+                        popular: false,
+                        congestion: "low",
+                        favorite: false,
+                        comments: [
+                            {
+                                id: 1,
+                                author: "面食控",
+                                content: "面条很有嚼劲，酱料特别香，值得一试！",
+                                date: "2025-5-04"
+                            }
+                        ],
+                        merchantNotice: "每日限量：特色牛肉面，售完即止！"
+                    },
+                    {
+                        id: 4,
+                        name: "张亮麻辣烫",
+                        fiveMin: "28人",
+                        oneMin: "9人",
+                        total: "72人",
+                        totalValue: 72,
+                        image: "linear-gradient(135deg, #f093fb 0%, #f5576c 100%)",
+                        popular: true,
+                        congestion: "high",
+                        favorite: false,
+                        comments: [
+                            {
+                                id: 1,
+                                author: "辣味爱好者",
+                                content: "汤底麻辣鲜香，食材新鲜，是我吃过最好的麻辣烫之一！",
+                                date: "2025-11-05"
+                            },
+                            {
+                                id: 2,
+                                author: "小张同学",
+                                content: "价格实惠，分量足，就是高峰期排队时间太长。",
+                                date: "2025-1-02"
+                            },
+                            {
+                                id: 3,
+                                author: "美食家老王",
+                                content: "汤底味道正宗，食材种类丰富，强烈推荐！",
+                                date: "2025-4-01"
+                            }
+                        ],
+                        merchantNotice: "学生特惠：凭学生证享9折优惠！"
+                    },
+                    {
+                        id: 5,
+                        name: "杂粮煎饼",
+                        fiveMin: "25人",
+                        oneMin: "7人",
+                        total: "41人",
+                        totalValue: 41,
+                        image: "linear-gradient(135deg, #f6d365 0%, #fda085 100%)",
+                        popular: false,
+                        congestion: "medium",
+                        favorite: false,
+                        comments: [
+                            {
+                                id: 1,
+                                author: "早餐达人",
+                                content: "煎饼香脆可口，配料丰富，是完美的早餐选择！",
+                                date: "2025-5-04"
+                            }
+                        ],
+                        merchantNotice: "新品：芝士培根煎饼，欢迎品尝！"
+                    }
+                ];
+            }
+
+            // 更新数据库状态
+            updateDbStatus(status, message) {
+                this.dbStatus.className = 'db-status';
+                if (status === 'connected') {
+                    this.dbStatus.innerHTML = `<i class="fas fa-database"></i><span>${message}</span>`;
+                } else if (status === 'connecting') {
+                    this.dbStatus.classList.add('connecting');
+                    this.dbStatus.innerHTML = `<span class="loader"></span><span>${message}</span>`;
+                } else if (status === 'error') {
+                    this.dbStatus.classList.add('error');
+                    this.dbStatus.innerHTML = `<i class="fas fa-exclamation-triangle"></i><span>${message}</span>`;
+                }
+            }
+        }
+
+        // ========== 食堂应用核心功能 ==========
+        class CanteenApp {
+            constructor() {
+                this.dbService = new DatabaseService();
+                this.foodCourt = document.getElementById('foodCourt');
+                this.recommendedWindows = document.getElementById('recommendedWindows');
+                this.detailModal = document.getElementById('detailModal');
+                this.closeModal = document.getElementById('closeModal');
+                this.modalTitle = document.getElementById('modalTitle');
+                this.fiveMinValue = document.getElementById('fiveMinValue');
+                this.oneMinValue = document.getElementById('oneMinValue');
+                this.totalValue = document.getElementById('totalValue');
+                this.congestionValue = document.getElementById('congestionValue');
+                this.trendBars = document.getElementById('trendBars');
+                this.updateTime = document.getElementById('updateTime');
+                this.favoriteBtn = document.getElementById('favoriteBtn');
+                this.submitComment = document.getElementById('submitComment');
+                this.commentsList = document.getElementById('commentsList');
+                this.commentName = document.getElementById('commentName');
+                this.commentText = document.getElementById('commentText');
+                this.totalPeople = document.getElementById('totalPeople');
+                this.fiveMinPeople = document.getElementById('fiveMinPeople');
+                this.oneMinPeople = document.getElementById('oneMinPeople');
+                this.announcementList = document.getElementById('announcementList');
+                this.searchInput = document.getElementById('searchInput');
+                
+                // "我常吃的"相关元素
+                this.favoritesGrid = document.getElementById('favoritesGrid');
+                this.windowSelector = document.getElementById('windowSelector');
+                this.closeSelector = document.getElementById('closeSelector');
+                this.windowOptions = document.getElementById('windowOptions');
+                this.myFavorites = []; // 存储用户选择的"我常吃的"窗口ID
+                
+                // 商家端元素
+                this.userSection = document.querySelector('.user-section');
+                this.merchantSection = document.querySelector('.merchant-section');
+                this.merchantSelect = document.getElementById('merchantSelect');
+                this.merchantTotal = document.getElementById('merchantTotal');
+                this.merchantRating = document.getElementById('merchantRating');
+                this.merchantNotice = document.getElementById('merchantNotice');
+                this.merchantReply = document.getElementById('merchantReply');
+                this.pendingCount = document.getElementById('pendingCount');
+                this.merchantComments = document.getElementById('merchantComments');
+                this.publishNotice = document.getElementById('publishNotice');
+                this.submitReply = document.getElementById('submitReply');
+                this.currentWindowName = document.getElementById('currentWindowName');
+                
+                // Magic模式相关
+                this.magicBtn = document.getElementById('magicBtn');
+                this.magicActive = document.getElementById('magicActive');
+                this.sortableInstance = null;
+                this.magicMode = false;
+                
+                this.currentRole = 'user'; // 'user' 或 'merchant'
+                this.currentWindowId = null;
+                this.windowsData = [];
+                this.currentMerchantId = null; // 当前登录的商家ID
+            }
+
+            // 初始化应用
+            async init() {
+                // 连接数据库
+                await this.dbService.connect();
+                
+                // 获取数据
+                this.windowsData = await this.dbService.getAllWindows();
+                
+                // 加载"我常吃的"数据
+                this.myFavorites = this.dbService.getMyFavorites();
+                
+                // 渲染UI
+                this.renderMyFavorites();
+                this.renderRecommendedWindows();
+                this.renderWindowCards();
+                this.renderAnnouncements();
+                this.updateTimestamp();
+                
+                // 初始化商家端数据
+                this.renderMerchantOptions();
+                
+                // 设置默认商家窗口
+                if (this.windowsData.length > 0) {
+                    this.currentMerchantId = this.windowsData[0].id;
+                    this.updateMerchantDashboard();
+                }
+                
+                // 添加事件监听
+                this.addEventListeners();
+                
+                // 每分钟更新一次数据
+                setInterval(() => this.simulateDataUpdate(), 60000);
+                
+                // 随机选择一个窗口作为初始展示
+                setTimeout(() => {
+                    this.openWindowDetail(Math.floor(Math.random() * 5) + 1);
+                }, 1500);
+            }
+
+            // 新增：渲染"我常吃的"组件
+            renderMyFavorites() {
+                this.favoritesGrid.innerHTML = '';
+                
+                // 渲染三个位置
+                for (let i = 0; i < 3; i++) {
+                    const slot = document.createElement('div');
+                    slot.className = 'favorite-slot';
+                    slot.dataset.index = i;
+                    
+                    if (this.myFavorites[i]) {
+                        // 有选择的窗口
+                        const window = this.windowsData.find(w => w.id === this.myFavorites[i]);
+                        if (window) {
+                            slot.classList.add('filled');
+                            slot.innerHTML = `
+                                <button class="remove-favorite" data-index="${i}">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                                <div class="favorite-window">
+                                    <div class="favorite-window-name">
+                                        <i class="fas fa-utensils"></i> ${window.name}
+                                    </div>
+                                    <div class="favorite-window-stats">
+                                        今日总人数: ${window.total}
+                                    </div>
+                                    <div class="favorite-congestion ${this.getCongestionClass(window.congestion)}">
+                                        ${this.getCongestionText(window.congestion)}
+                                    </div>
+                                </div>
+                            `;
+                            
+                            // 点击查看详情
+                            slot.addEventListener('click', (e) => {
+                                if (!e.target.closest('.remove-favorite')) {
+                                    this.openWindowDetail(window.id);
+                                }
+                            });
+                        } else {
+                            // 窗口不存在，重置该位置
+                            this.myFavorites[i] = null;
+                            this.saveFavorites();
+                            i--; // 重新渲染这个位置
+                            continue;
+                        }
+                    } else {
+                        // 空位置
+                        slot.classList.add('empty');
+                        slot.innerHTML = `
+                            <div class="empty-placeholder">
+                                <i class="fas fa-plus-circle"></i>
+                                <span>添加常吃窗口</span>
+                            </div>
+                        `;
+                        
+                        // 点击添加窗口
+                        slot.addEventListener('click', () => {
+                            this.openWindowSelector(i);
+                        });
+                    }
+                    
+                    this.favoritesGrid.appendChild(slot);
+                }
+                
+                // 添加移除按钮事件监听
+                document.querySelectorAll('.remove-favorite').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        const index = parseInt(btn.dataset.index);
+                        this.removeFavorite(index);
+                    });
+                });
+            }
+
+            // 新增：打开窗口选择器
+            openWindowSelector(slotIndex) {
+                this.currentSlotIndex = slotIndex;
+                this.renderWindowOptions();
+                this.windowSelector.classList.add('active');
+            }
+
+            // 新增：关闭窗口选择器
+            closeWindowSelector() {
+                this.windowSelector.classList.remove('active');
+            }
+
+            // 新增：渲染窗口选择项
+            renderWindowOptions() {
+                this.windowOptions.innerHTML = '';
+                
+                this.windowsData.forEach(window => {
+                    const option = document.createElement('div');
+                    option.className = 'window-option';
+                    option.dataset.id = window.id;
+                    
+                    // 检查是否已被选择
+                    const isSelected = this.myFavorites.includes(window.id);
+                    if (isSelected) {
+                        option.classList.add('disabled');
+                    }
+                    
+                    option.innerHTML = `
+                        <div class="option-name">
+                            <i class="fas fa-utensils"></i> ${window.name}
+                            ${isSelected ? '<i class="fas fa-check-circle" style="color: #e74c3c;"></i>' : ''}
+                        </div>
+                        <div class="option-stats">
+                            <span>今日: ${window.total}</span>
+                            <span>五分钟: ${window.fiveMin}</span>
+                            <span>一分钟: ${window.oneMin}</span>
+                        </div>
+                        <div class="option-congestion">
+                            <span class="congestion ${this.getCongestionClass(window.congestion)}">
+                                ${this.getCongestionText(window.congestion)}
+                            </span>
+                        </div>
+                    `;
+                    
+                    // 添加点击事件（如果未被选择）
+                    if (!isSelected) {
+                        option.addEventListener('click', () => {
+                            this.selectFavoriteWindow(window.id);
+                        });
+                    }
+                    
+                    this.windowOptions.appendChild(option);
+                });
+            }
+
+            // 新增：选择窗口添加到"我常吃的"
+            selectFavoriteWindow(windowId) {
+                this.myFavorites[this.currentSlotIndex] = windowId;
+                this.saveFavorites();
+                this.renderMyFavorites();
+                this.closeWindowSelector();
+            }
+
+            // 新增：移除"我常吃的"窗口
+            removeFavorite(index) {
+                if (confirm('确定要移除这个常吃窗口吗？')) {
+                    this.myFavorites[index] = null;
+                    this.saveFavorites();
+                    this.renderMyFavorites();
+                }
+            }
+
+            // 新增：保存"我常吃的"选择
+            saveFavorites() {
+                // 清除null值并保存
+                const validFavorites = this.myFavorites.filter(id => id !== null);
+                this.dbService.saveMyFavorites(validFavorites);
+            }
+
+            // 获取今日用餐人数最多的三个窗口
+            getTopThreeWindows() {
+                // 按今日用餐总人数排序（降序）
+                const sortedWindows = [...this.windowsData].sort((a, b) => b.totalValue - a.totalValue);
+                return sortedWindows.slice(0, 3);
+            }
+
+            // 计算拥挤程度
+            calculateCongestion(oneMin) {
+                const count = parseInt(oneMin);
+                if (count <= 3) return "low";
+                if (count <= 6) return "medium";
+                return "high";
+            }
+
+            // 获取拥挤度文本
+            getCongestionText(congestion) {
+                switch(congestion) {
+                    case "low": return "空闲";
+                    case "medium": return "适中";
+                    case "high": return "拥挤";
+                    default: return "未知";
+                }
+            }
+
+            // 获取拥挤度类名
+            getCongestionClass(congestion) {
+                switch(congestion) {
+                    case "low": return "low-congestion";
+                    case "medium": return "medium-congestion";
+                    case "high": return "high-congestion";
+                    default: return "";
+                }
+            }
+
+            // 渲染推荐窗口
+            renderRecommendedWindows() {
+                this.recommendedWindows.innerHTML = '';
+                const topWindows = this.getTopThreeWindows();
+                
+                // 计算总人数
+                let totalPeople = 0;
+                this.windowsData.forEach(window => {
+                    totalPeople += window.totalValue;
+                });
+                this.totalPeople.textContent = `${totalPeople}人`;
+                
+                topWindows.forEach((window, index) => {
+                    const rank = index + 1;
+                    let medalClass = "";
+                    let medalIcon = "";
+                    
+                    // 设置奖牌样式
+                    if (rank === 1) {
+                        medalClass = "gold";
+                        medalIcon = "fa-trophy";
+                    } else if (rank === 2) {
+                        medalClass = "silver";
+                        medalIcon = "fa-medal";
+                    } else {
+                        medalClass = "bronze";
+                        medalIcon = "fa-award";
+                    }
+                    
+                    const card = document.createElement('div');
+                    card.className = 'rec-card';
+                    card.dataset.id = window.id;
+                    card.innerHTML = `
+                        <div class="rec-rank">${rank}</div>
+                        <div class="rec-name">
+                            <i class="fas fa-utensils"></i> ${window.name}
+                        </div>
+                        <div class="rec-total">${window.total}</div>
+                        <div class="rec-label">今日用餐总人数</div>
+                        <div class="congestion ${this.getCongestionClass(window.congestion)}">
+                            ${this.getCongestionText(window.congestion)}
+                        </div>
+                        <div class="rec-medal ${medalClass}">
+                            <i class="fas ${medalIcon}"></i>
+                        </div>
+                    `;
+                    
+                    card.addEventListener('click', () => this.openWindowDetail(window.id));
+                    this.recommendedWindows.appendChild(card);
+                });
+            }
+
+            // 渲染公告
+            renderAnnouncements() {
+                this.announcementList.innerHTML = '';
+                
+                this.windowsData.forEach(window => {
+                    if (window.merchantNotice && window.merchantNotice.trim() !== '') {
+                        const today = new Date();
+                        const dateStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+                        
+                        const announceCard = document.createElement('div');
+                        announceCard.className = 'announce-card';
+                        announceCard.innerHTML = `
+                            <div class="announce-header">
+                                <div class="announce-window">
+                                    <i class="fas fa-store"></i> ${window.name}
+                                </div>
+                                <div class="announce-date">${dateStr}</div>
+                            </div>
+                            <div class="announce-content">
+                                ${window.merchantNotice}
+                            </div>
+                        `;
+                        
+                        this.announcementList.appendChild(announceCard);
+                    }
+                });
+            }
+
+            // 生成随机趋势数据
+            generateTrendData() {
+                const data = [];
+                for (let i = 0; i < 6; i++) {
+                    data.push(Math.floor(Math.random() * 10) + 1);
+                }
+                return data;
+            }
+
+            // 新增：根据保存的顺序排序窗口数据
+            sortWindowsByOrder(windows) {
+                const savedOrder = this.dbService.getCardOrder();
+                if (!savedOrder) {
+                    return windows; // 如果没有保存的顺序，返回原始数据
+                }
+
+                // 按照保存的顺序排序
+                const sortedWindows = [];
+                const windowsMap = new Map(windows.map(window => [window.id, window]));
+                
+                // 首先按照保存的顺序添加窗口
+                savedOrder.forEach(id => {
+                    if (windowsMap.has(id)) {
+                        sortedWindows.push(windowsMap.get(id));
+                        windowsMap.delete(id);
+                    }
+                });
+                
+                // 然后添加任何新的窗口（不在保存的顺序中）
+                windowsMap.forEach(window => {
+                    sortedWindows.push(window);
+                });
+                
+                return sortedWindows;
+            }
+
+            // 渲染食堂窗口卡片
+            async renderWindowCards() {
+                this.foodCourt.innerHTML = '';
+                let windows = await this.dbService.getAllWindows();
+                
+                // 应用保存的卡片顺序
+                windows = this.sortWindowsByOrder(windows);
+                
+                // 计算五分钟和一分钟新增人数
+                let fiveMinTotal = 0;
+                let oneMinTotal = 0;
+                
+                windows.forEach(window => {
+                    fiveMinTotal += parseInt(window.fiveMin);
+                    oneMinTotal += parseInt(window.oneMin);
+                });
+                
+                this.fiveMinPeople.textContent = `${fiveMinTotal}人`;
+                this.oneMinPeople.textContent = `${oneMinTotal}人`;
+                
+                windows.forEach(window => {
+                    const card = document.createElement('div');
+                    card.className = 'window-card';
+                    card.dataset.id = window.id;
+                    
+                    // 如果已收藏，添加特殊样式
+                    if (window.favorite) {
+                        card.style.boxShadow = '0 12px 40px rgba(231, 76, 60, 0.3)';
+                        card.style.border = '2px solid #e74c3c';
+                    }
+                    
+                    card.innerHTML = `
+                        <button class="favorite-btn ${window.favorite ? 'active' : ''}" data-id="${window.id}">
+                            <i class="${window.favorite ? 'fas' : 'far'} fa-star"></i>
+                        </button>
+                        <div class="window-image" style="background: ${window.image};"></div>
+                        <div class="window-info">
+                            <h3 class="window-name">
+                                <i class="fas fa-utensil-spoon"></i> ${window.name}
+                            </h3>
+                            <div class="window-stats">
+                                <span class="stat-label">五分钟内:</span>
+                                <span class="stat-value">${window.fiveMin}</span>
+                            </div>
+                            <div class="window-stats">
+                                <span class="stat-label">一分钟内:</span>
+                                <span class="stat-value">${window.oneMin}</span>
+                            </div>
+                            <div class="window-stats">
+                                <span class="stat-label">今日总人数:</span>
+                                <span class="stat-value">${window.total}</span>
+                            </div>
+                            <div class="window-stats">
+                                <span class="stat-label">拥挤程度:</span>
+                                <span class="stat-value">
+                                    <span class="congestion ${this.getCongestionClass(window.congestion)}">
+                                        ${this.getCongestionText(window.congestion)}
+                                    </span>
+                                </span>
+                            </div>
+                        </div>
+                        ${window.popular ? '<div class="popular">人气窗口</div>' : ''}
+                    `;
+                    
+                    card.addEventListener('click', () => this.openWindowDetail(window.id));
+                    this.foodCourt.appendChild(card);
+                });
+                
+                // 添加收藏按钮事件监听
+                document.querySelectorAll('.favorite-btn').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        const id = parseInt(btn.dataset.id);
+                        this.toggleFavorite(id);
+                    });
+                });
+                
+                // 应用搜索过滤
+                this.filterWindows(this.searchInput.value);
+                
+                // 如果Magic模式激活，重新初始化拖拽功能
+                if (this.magicMode) {
+                    this.initSortable();
+                }
+            }
+
+            // 过滤窗口显示
+            filterWindows(query) {
+                if (!query) {
+                    document.querySelectorAll('.window-card').forEach(card => {
+                        card.classList.remove('hidden');
+                    });
+                    return;
+                }
+                
+                const searchTerm = query.toLowerCase();
+                let firstMatch = null;
+                
+                document.querySelectorAll('.window-card').forEach(card => {
+                    const windowName = card.querySelector('.window-name').textContent.toLowerCase();
+                    
+                    if (windowName.includes(searchTerm)) {
+                        card.classList.remove('hidden');
+                        
+                        // 记录第一个匹配项
+                        if (!firstMatch) {
+                            firstMatch = card;
+                        }
+                        
+                        // 高亮显示匹配部分
+                        const nameElement = card.querySelector('.window-name');
+                        const originalName = nameElement.innerHTML;
+                        const regex = new RegExp(`(${query})`, 'gi');
+                        const highlighted = originalName.replace(regex, '<span class="highlight">$1</span>');
+                        nameElement.innerHTML = highlighted;
+                    } else {
+                        card.classList.add('hidden');
+                    }
+                });
+                
+                // 自动打开第一个匹配的窗口
+                if (firstMatch) {
+                    const id = parseInt(firstMatch.dataset.id);
+                    this.openWindowDetail(id);
+                }
+            }
+
+            // 渲染评论
+            renderComments(comments) {
+                this.commentsList.innerHTML = '';
+                
+                if (comments.length === 0) {
+                    this.commentsList.innerHTML = '<div class="no-comments">暂无评论，成为第一个评论者吧！</div>';
+                    return;
+                }
+
+                const currentUser = localStorage.getItem('comment_author_name');
+                
+                // 按日期排序（最新的在前）
+                const sortedComments = [...comments].sort((a, b) => 
+                    new Date(b.date) - new Date(a.date)
+                );
+                
+                sortedComments.forEach(comment => {
+                    const commentEl = document.createElement('div');
+                    commentEl.className = 'comment';
+                    
+                    let replySection = '';
+                    if (comment.reply) {
+                        replySection = `<div class="comment-reply"><i class="fas fa-reply"></i> 商家回复：${comment.reply}</div>`;
+                    }
+
+                    let deleteButton = '';
+                    // 如果当前用户是评论的作者，则显示删除按钮
+                    if (currentUser && comment.author === currentUser) {
+                        deleteButton = `<button class="delete-comment" data-id="${comment.id}" title="删除评论">
+                            <i class="fas fa-trash-alt"></i>
+                        </button>`;
+                    }
+                    
+                    commentEl.innerHTML = `
+                        <div class="comment-header">
+                            <div class="comment-author">${comment.author}</div>
+                            <div class="comment-date">${comment.date}</div>
+                        </div>
+                        <div class="comment-content">${comment.content}</div>
+                        ${replySection}
+                        ${deleteButton}
+                    `;
+                    
+                    this.commentsList.appendChild(commentEl);
+                });
+                
+                // 添加删除按钮事件监听
+                document.querySelectorAll('.delete-comment').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        const commentId = parseInt(btn.dataset.id);
+                        this.deleteComment(commentId);
+                    });
+                });
+            }
+
+            // 删除评论
+            async deleteComment(commentId) {
+                if (!confirm('确定要删除这条评论吗？')) return;
+                
+                const windowIndex = this.windowsData.findIndex(w => w.id === this.currentWindowId);
+                if (windowIndex === -1) return;
+                
+                // 找到评论索引
+                const commentIndex = this.windowsData[windowIndex].comments.findIndex(c => c.id === commentId);
+                if (commentIndex !== -1) {
+                    // 删除评论
+                    this.windowsData[windowIndex].comments.splice(commentIndex, 1);
+                    
+                    // 更新数据库
+                    await this.dbService.updateWindow(this.currentWindowId, {
+                        comments: this.windowsData[windowIndex].comments
+                    });
+                    
+                    // 重新渲染评论
+                    this.renderComments(this.windowsData[windowIndex].comments);
+                    
+                    // 显示删除成功提示
+                    this.dbService.showDataStatus('评论已删除', 'success');
+                }
+            }
+
+            // 切换收藏状态
+            async toggleFavorite(id) {
+                const windowIndex = this.windowsData.findIndex(w => w.id === id);
+                if (windowIndex === -1) return;
+                
+                this.windowsData[windowIndex].favorite = !this.windowsData[windowIndex].favorite;
+                
+                // 更新数据库
+                await this.dbService.updateWindow(id, {
+                    favorite: this.windowsData[windowIndex].favorite
+                });
+                
+                // 添加动画效果
+                const btn = document.querySelector(`.favorite-btn[data-id="${id}"]`);
+                if (btn) {
+                    btn.classList.add('pulse');
+                    setTimeout(() => {
+                        btn.classList.remove('pulse');
+                    }, 1000);
+                }
+                
+                this.renderWindowCards();
+                
+                // 更新详情模态框中的收藏按钮状态
+                if (this.currentWindowId === id) {
+                    this.favoriteBtn.querySelector('i').className = this.windowsData[windowIndex].favorite ? 'fas fa-star' : 'far fa-star';
+                    this.favoriteBtn.innerHTML = `<i class="${this.windowsData[windowIndex].favorite ? 'fas' : 'far'} fa-star"></i> ${this.windowsData[windowIndex].favorite ? '已收藏' : '收藏此窗口'}`;
+                    
+                    // 添加动画效果
+                    this.favoriteBtn.classList.add('pulse');
+                    setTimeout(() => {
+                        this.favoriteBtn.classList.remove('pulse');
+                    }, 1000);
+                }
+            }
+
+            // 打开窗口详情
+            async openWindowDetail(windowId) {
+                const window = this.windowsData.find(w => w.id === windowId);
+                if (!window) return;
+                
+                this.currentWindowId = windowId;
+                this.modalTitle.textContent = window.name;
+                this.fiveMinValue.textContent = window.fiveMin;
+                this.oneMinValue.textContent = window.oneMin;
+                this.totalValue.textContent = window.total;
+                this.congestionValue.textContent = this.getCongestionText(window.congestion);
+                this.congestionValue.className = this.getCongestionClass(window.congestion);
+                
+                // 更新收藏按钮状态
+                this.favoriteBtn.querySelector('i').className = window.favorite ? 'fas fa-star' : 'far fa-star';
+                this.favoriteBtn.innerHTML = `<i class="${window.favorite ? 'fas' : 'far'} fa-star"></i> ${window.favorite ? '已收藏' : '收藏此窗口'}`;
+                
+                // 生成趋势图
+                this.trendBars.innerHTML = '';
+                const trendData = this.generateTrendData();
+                const labels = ['25分', '20分', '15分', '10分', '5分', '当前'];
+                
+                trendData.forEach((value, index) => {
+                    const bar = document.createElement('div');
+                    bar.className = 'bar';
+                    bar.style.height = `${value * 10}px`;
+                    bar.innerHTML = `<div class="bar-value">${value}</div><div class="bar-label">${labels[index]}</div>`;
+                    
+                    this.trendBars.appendChild(bar);
+                });
+                
+                // 渲染评论
+                this.renderComments(window.comments);
+                
+                // 重置评论表单
+                this.commentName.value = localStorage.getItem('comment_author_name') || '';
+                this.commentText.value = '';
+                
+                this.detailModal.classList.add('active');
+            }
+
+            // 关闭详情模态框
+            closeWindowDetail() {
+                this.detailModal.classList.remove('active');
+            }
+
+            // 更新最后更新时间
+            updateTimestamp() {
+                const now = new Date();
+                const timeString = now.toTimeString().substring(0, 8);
+                this.updateTime.textContent = timeString;
+            }
+
+            // 模拟数据更新
+            async simulateDataUpdate() {
+                const updatedWindows = await this.dbService.getAllWindows();
+                
+                updatedWindows.forEach((window, index) => {
+                    // 生成一分钟人数 (1-10)
+                    const oneMin = Math.floor(Math.random() * 10) + 1;
+                    
+                    // 生成五分钟人数 (10-100)
+                    const fiveMin = Math.floor(Math.random() * 91) + 10;
+                    
+                    // 更新总人数
+                    const totalIncrease = Math.floor(Math.random() * 10) + 1;
+                    window.totalValue += totalIncrease;
+                    
+                    // 更新数据
+                    window.oneMin = `${oneMin}人`;
+                    window.fiveMin = `${fiveMin}人`;
+                    window.total = `${window.totalValue}人`;
+                    
+                    // 更新拥挤度
+                    window.congestion = this.calculateCongestion(oneMin);
+                    
+                    // 更新数据库
+                    this.dbService.updateWindow(window.id, {
+                        fiveMin: window.fiveMin,
+                        oneMin: window.oneMin,
+                        total: window.total,
+                        totalValue: window.totalValue,
+                        congestion: window.congestion
+                    });
+                });
+                
+                // 更新本地数据
+                this.windowsData = updatedWindows;
+                
+                // 重新渲染界面
+                this.updateTimestamp();
+                this.renderMyFavorites();
+                this.renderRecommendedWindows();
+                this.renderWindowCards();
+                this.renderAnnouncements();
+                
+                // 更新商家端数据
+                if (this.currentMerchantId) {
+                    this.updateMerchantDashboard();
+                }
+                
+                // 添加数据更新动画
+                document.querySelectorAll('.stats-value').forEach(el => {
+                    el.classList.add('pulse');
+                    setTimeout(() => {
+                        el.classList.remove('pulse');
+                    }, 1000);
+                });
+            }
+            
+            // 渲染商家窗口选项
+            renderMerchantOptions() {
+                this.merchantSelect.innerHTML = '';
+                
+                this.windowsData.forEach(window => {
+                    const option = document.createElement('option');
+                    option.value = window.id;
+                    option.textContent = window.name;
+                    this.merchantSelect.appendChild(option);
+                });
+            }
+            
+            // 更新商家端仪表盘
+            updateMerchantDashboard() {
+                if (!this.currentMerchantId) return;
+                
+                const merchantWindow = this.windowsData.find(w => w.id === this.currentMerchantId);
+                if (!merchantWindow) return;
+                
+                // 更新当前窗口名称
+                this.currentWindowName.textContent = merchantWindow.name;
+                
+                // 更新商家统计数据
+                this.merchantTotal.textContent = `${merchantWindow.totalValue}人`;
+                
+                // 随机生成评分（4.5-5.0之间）
+                const rating = (Math.random() * 0.5 + 4.5).toFixed(1);
+                this.merchantRating.textContent = rating;
+                
+                // 更新公告
+                this.merchantNotice.value = merchantWindow.merchantNotice || '';
+                
+                // 更新待回复评论
+                this.renderPendingComments(merchantWindow.comments);
+            }
+            
+            // 渲染待回复评论
+            renderPendingComments(comments) {
+                this.merchantComments.innerHTML = '';
+                
+                // 筛选没有回复的评论
+                const pendingComments = comments.filter(comment => !comment.reply);
+                
+                this.pendingCount.textContent = pendingComments.length;
+                
+                if (pendingComments.length === 0) {
+                    this.merchantComments.innerHTML = '<div class="no-comments">暂无待处理评论</div>';
+                    return;
+                }
+                
+                pendingComments.forEach(comment => {
+                    const commentEl = document.createElement('div');
+                    commentEl.className = 'comment';
+                    commentEl.dataset.id = comment.id;
+                    commentEl.innerHTML = `
+                        <div class="comment-header">
+                            <div class="comment-author">${comment.author}</div>
+                            <div class="comment-date">${comment.date}</div>
+                        </div>
+                        <div class="comment-content">${comment.content}</div>
+                    `;
+                    
+                    // 点击评论填充回复框
+                    commentEl.addEventListener('click', () => {
+                        this.merchantReply.value = `回复 ${comment.author}：`;
+                        this.merchantReply.dataset.commentId = comment.id;
+                        this.merchantReply.focus();
+                    });
+                    
+                    this.merchantComments.appendChild(commentEl);
+                });
+            }
+            
+            // 发布公告
+            async publishMerchantNotice() {
+                if (!this.currentMerchantId) {
+                    alert('请先选择一个窗口');
+                    return;
+                }
+                
+                const notice = this.merchantNotice.value.trim();
+                if (!notice) {
+                    alert('请输入公告内容');
+                    return;
+                }
+                
+                await this.dbService.updateWindow(this.currentMerchantId, {
+                    merchantNotice: notice
+                });
+                
+                // 更新本地数据
+                const index = this.windowsData.findIndex(w => w.id === this.currentMerchantId);
+                if (index !== -1) {
+                    this.windowsData[index].merchantNotice = notice;
+                }
+                
+                // 更新用户端公告
+                this.renderAnnouncements();
+                
+                // 显示成功提示
+                this.dbService.showDataStatus('公告已发布', 'success');
+            }
+            
+            // 删除公告
+            async deleteMerchantNotice() {
+                if (!this.currentMerchantId) {
+                    alert('请先选择一个窗口');
+                    return;
+                }
+                
+                if (!confirm('确定要删除当前公告吗？')) return;
+                
+                await this.dbService.updateWindow(this.currentMerchantId, {
+                    merchantNotice: ""
+                });
+                
+                // 更新本地数据
+                const index = this.windowsData.findIndex(w => w.id === this.currentMerchantId);
+                if (index !== -1) {
+                    this.windowsData[index].merchantNotice = "";
+                }
+                
+                // 更新用户端公告
+                this.renderAnnouncements();
+                
+                // 清空公告输入框
+                this.merchantNotice.value = "";
+                
+                // 显示成功提示
+                this.dbService.showDataStatus('公告已删除', 'success');
+            }
+            
+            // 商家回复评论
+            async submitMerchantReply() {
+                if (!this.currentMerchantId) {
+                    alert('请先选择一个窗口');
+                    return;
+                }
+                
+                const reply = this.merchantReply.value.trim();
+                const commentId = parseInt(this.merchantReply.dataset.commentId);
+                
+                if (!commentId) {
+                    alert('请选择要回复的评论');
+                    return;
+                }
+                
+                if (!reply) {
+                    alert('请输入回复内容');
+                    return;
+                }
+                
+                const windowIndex = this.windowsData.findIndex(w => w.id === this.currentMerchantId);
+                if (windowIndex === -1) return;
+                
+                // 找到评论索引
+                const commentIndex = this.windowsData[windowIndex].comments.findIndex(c => c.id === commentId);
+                if (commentIndex !== -1) {
+                    // 添加回复
+                    this.windowsData[windowIndex].comments[commentIndex].reply = reply;
+                    
+                    // 更新数据库
+                    await this.dbService.updateWindow(this.currentMerchantId, {
+                        comments: this.windowsData[windowIndex].comments
+                    });
+                    
+                    // 重新渲染评论
+                    this.renderPendingComments(this.windowsData[windowIndex].comments);
+                    
+                    // 重置回复框
+                    this.merchantReply.value = '';
+                    delete this.merchantReply.dataset.commentId;
+                    
+                    this.dbService.showDataStatus('回复已提交', 'success');
+                }
+            }
+            
+            // 切换角色
+            switchRole(role) {
+                this.currentRole = role;
+                
+                // 更新UI
+                document.querySelectorAll('.role-btn').forEach(btn => {
+                    btn.classList.remove('active');
+                });
+                
+                if (role === 'user') {
+                    document.querySelector('.role-btn.user').classList.add('active');
+                    this.userSection.style.display = 'block';
+                    this.merchantSection.style.display = 'none';
+                } else {
+                    document.querySelector('.role-btn.merchant').classList.add('active');
+                    this.userSection.style.display = 'none';
+                    this.merchantSection.style.display = 'block';
+                    
+                    // 更新商家端数据
+                    if (this.currentMerchantId) {
+                        this.updateMerchantDashboard();
+                    }
+                }
+            }
+            
+            // 添加评论功能
+            async addComment() {
+                if (!this.currentWindowId) return;
+                
+                // 获取输入值
+                const name = this.commentName.value.trim();
+                const text = this.commentText.value.trim();
+                
+                // 验证输入
+                if (!name || !text) {
+                    alert('请填写昵称和评论内容');
+                    return;
+                }
+                
+                // 保存用户名，以便后续删除
+                localStorage.setItem('comment_author_name', name);
+                
+                // 获取当前日期
+                const today = new Date();
+                const dateStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+                
+                // 创建新评论对象
+                const newComment = {
+                    id: Date.now(), // 使用时间戳作为唯一ID
+                    author: name,
+                    content: text,
+                    date: dateStr
+                };
+                
+                // 找到当前窗口索引
+                const windowIndex = this.windowsData.findIndex(w => w.id === this.currentWindowId);
+                if (windowIndex === -1) return;
+                
+                // 添加评论到窗口
+                this.windowsData[windowIndex].comments.push(newComment);
+                
+                // 更新数据库
+                await this.dbService.updateWindow(this.currentWindowId, {
+                    comments: this.windowsData[windowIndex].comments
+                });
+                
+                // 重新渲染评论列表
+                this.renderComments(this.windowsData[windowIndex].comments);
+                
+                // 显示成功提示
+                this.dbService.showDataStatus('评论已提交！', 'success');
+                
+                // 重置表单
+                this.commentText.value = '';
+                
+                // 添加动画效果
+                this.commentsList.classList.add('pulse');
+                setTimeout(() => {
+                    this.commentsList.classList.remove('pulse');
+                }, 1000);
+            }
+            
+            // 初始化拖拽排序
+            initSortable() {
+                if (this.sortableInstance) {
+                    this.sortableInstance.destroy();
+                }
+                
+                this.sortableInstance = new Sortable(this.foodCourt, {
+                    animation: 350,
+                    easing: "cubic-bezier(0.175, 0.885, 0.32, 1.275)",
+                    ghostClass: "sortable-ghost",
+                    chosenClass: "sortable-chosen",
+                    onStart: () => {
+                        this.foodCourt.classList.add('jelly-card');
+                    },
+                    onEnd: (evt) => {
+                        this.foodCourt.classList.remove('jelly-card');
+                        
+                        // 新增：保存新的卡片顺序
+                        this.saveCardOrder();
+                    }
+                });
+            }
+
+            // 新增：保存当前卡片顺序
+            saveCardOrder() {
+                const cards = this.foodCourt.querySelectorAll('.window-card');
+                const order = Array.from(cards).map(card => parseInt(card.dataset.id));
+                
+                // 保存到数据库服务
+                this.dbService.saveCardOrder(order);
+            }
+            
+            // 切换Magic模式
+            toggleMagicMode() {
+                this.magicMode = !this.magicMode;
+                
+                if (this.magicMode) {
+                    // 激活Magic模式
+                    this.magicActive.style.display = 'block';
+                    this.magicBtn.innerHTML = '<i class="fas fa-wand-magic-sparkles"></i> 关闭Magic';
+                    this.magicBtn.style.background = 'linear-gradient(135deg, #ff416c, #ff4b2b)';
+                    
+                    // 添加果冻质感
+                    document.querySelectorAll('.window-card, .stats-card, .rec-card, .feature-card').forEach(card => {
+                        card.classList.add('jelly-card');
+                    });
+                    
+                    // 初始化拖拽排序
+                    this.initSortable();
+                } else {
+                    // 关闭Magic模式
+                    this.magicActive.style.display = 'none';
+                    this.magicBtn.innerHTML = '<i class="fas fa-wand-magic-sparkles"></i> Magic';
+                    this.magicBtn.style.background = 'linear-gradient(135deg, #6a11cb, #2575fc, #00c6fb, #00ff95)';
+                    
+                    // 移除果冻质感
+                    document.querySelectorAll('.jelly-card').forEach(card => {
+                        card.classList.remove('jelly-card');
+                    });
+                    
+                    // 销毁拖拽实例
+                    if (this.sortableInstance) {
+                        this.sortableInstance.destroy();
+                        this.sortableInstance = null;
+                    }
+                }
+            }
+
+            // 添加事件监听
+            addEventListeners() {
+                this.closeModal.addEventListener('click', () => this.closeWindowDetail());
+                
+                this.detailModal.addEventListener('click', (e) => {
+                    if (e.target === this.detailModal) {
+                        this.closeWindowDetail();
+                    }
+                });
+                
+                this.favoriteBtn.addEventListener('click', () => {
+                    if (this.currentWindowId) {
+                        this.toggleFavorite(this.currentWindowId);
+                    }
+                });
+                
+                // 绑定提交评论事件
+                this.submitComment.addEventListener('click', () => this.addComment());
+                
+                // 窗口选择器事件
+                this.closeSelector.addEventListener('click', () => this.closeWindowSelector());
+                
+                this.windowSelector.addEventListener('click', (e) => {
+                    if (e.target === this.windowSelector) {
+                        this.closeWindowSelector();
+                    }
+                });
+                
+                // 角色切换事件
+                document.querySelector('.role-btn.user').addEventListener('click', () => this.switchRole('user'));
+                document.querySelector('.role-btn.merchant').addEventListener('click', () => this.switchRole('merchant'));
+                
+                // 商家端事件
+                this.merchantSelect.addEventListener('change', () => {
+                    this.currentMerchantId = parseInt(this.merchantSelect.value);
+                    this.updateMerchantDashboard();
+                });
+                
+                this.publishNotice.addEventListener('click', () => this.publishMerchantNotice());
+                this.submitReply.addEventListener('click', () => this.submitMerchantReply());
+                document.getElementById('deleteNotice').addEventListener('click', () => this.deleteMerchantNotice());
+                
+                // 搜索功能
+                this.searchInput.addEventListener('input', () => {
+                    this.filterWindows(this.searchInput.value);
+                });
+                
+                // 搜索按钮点击事件
+                document.querySelector('.search-btn').addEventListener('click', () => {
+                    this.filterWindows(this.searchInput.value);
+                });
+                
+                // 回车键搜索
+                this.searchInput.addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') {
+                        this.filterWindows(this.searchInput.value);
+                    }
+                });
+                
+                // Magic按钮事件
+                this.magicBtn.addEventListener('click', () => this.toggleMagicMode());
+            }
+        }
+
+        // ========== 页面初始化 ==========
+        window.addEventListener('DOMContentLoaded', async () => {
+            const app = new CanteenApp();
+            await app.init();
+        });
+    </script>
+</body>
+</html>
