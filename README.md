@@ -1,180 +1,207 @@
-# DeepPavlov 1.0
+# King Of Eaters - 信科食堂用餐统计系统
 
-[![License Apache 2.0](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](LICENSE)
-![Python 3.6, 3.7, 3.8, 3.9, 3.10, 3.11](https://img.shields.io/badge/python-3.6%20%7C%203.7%20%7C%203.8%20%7C%203.9%20%7C%203.10%20%7C%203.11-green.svg)
-[![Downloads](https://pepy.tech/badge/deeppavlov)](https://pepy.tech/project/deeppavlov)
-[![Static Badge](https://img.shields.io/badge/DeepPavlov%20Community-blue)](https://forum.deeppavlov.ai/)
-[![Static Badge](https://img.shields.io/badge/DeepPavlov%20Demo-blue)](https://demo.deeppavlov.ai/)
+![License](https://img.shields.io/badge/license-MIT-blue.svg)
+![HTML5](https://img.shields.io/badge/HTML5-supported-green.svg)
+![CSS3](https://img.shields.io/badge/CSS3-supported-green.svg)
+![JavaScript](https://img.shields.io/badge/JavaScript-ES6+-green.svg)
 
+## 项目简介
 
-DeepPavlov 1.0 is an open-source NLP framework built on [PyTorch](https://pytorch.org/) and [transformers](https://github.com/huggingface/transformers). DeepPavlov 1.0 is created for modular and configuration-driven development of state-of-the-art NLP models and supports a wide range of NLP model applications. DeepPavlov 1.0 is designed for practitioners with limited knowledge of NLP/ML.
+King Of Eaters 是一个基于Web的食堂用餐统计系统，专为信科食堂设计。该系统提供实时用餐人数统计、窗口拥挤度分析、用户评论和商家管理功能，帮助师生优化用餐体验，提高食堂运营效率。
 
-## Quick Links
+## 主要功能
 
-|name|Description|
-|--|--|
-| ⭐️ [*Demo*](https://demo.deeppavlov.ai/)|Check out our NLP models in the online demo|
-| 📚 [*Documentation*](http://docs.deeppavlov.ai/)|How to use DeepPavlov 1.0 and its features|
-| 🚀 [*Model List*](http://docs.deeppavlov.ai/en/master/features/overview.html)|Find the NLP model you need in the list of available models|
-| 🪐 [*Contribution Guide*](http://docs.deeppavlov.ai/en/master/devguides/contribution_guide.html)|Please read the contribution guidelines before making a contribution|
-| 🎛 [*Issues*](https://github.com/deeppavlov/DeepPavlov/issues)|If you have an issue with DeepPavlov, please let us know|
-| ⏩ [*Forum*](https://forum.deeppavlov.ai/)|Please let us know if you have a problem with DeepPavlov|
-| 📦 [*Blogs*](https://medium.com/deeppavlov)|Read about our current development|
-| 🦙 [Extended colab tutorials](https://github.com/deeppavlov/dp_tutorials)|Check out the code tutorials for our models|
-| 🌌 [*Docker Hub*](https://hub.docker.com/u/deeppavlov/)|Check out the Docker images for rapid deployment|
-| 👩‍🏫 [*Feedback*](https://forms.gle/i64fowQmiVhMMC7f9)|Please leave us your feedback to make DeepPavlov better|
+- **实时数据统计**：每分钟更新各窗口用餐人数
+- **拥挤度分析**：直观显示各窗口当前拥挤程度（空闲/适中/拥挤）
+- **个性化推荐**：根据历史数据推荐最受欢迎的食堂窗口
+- **"我常吃的"功能**：快速访问常去的食堂窗口
+- **商家管理面板**：商家可发布公告、回复评论、查看统计数据
+- **用户评论系统**：分享用餐体验，提供反馈
+- **Magic模式**：拖拽排序、动画特效等趣味功能
 
+## 技术栈
 
-## Installation
+- **前端**：HTML5, CSS3, JavaScript (ES6+)
+- **UI库**：Font Awesome 图标
+- **动画效果**：CSS动画, SortableJS拖拽库
+- **数据存储**：浏览器localStorage
+- **响应式设计**：支持各种屏幕尺寸
 
-0. DeepPavlov supports `Linux`, `Windows 10+` (through WSL/WSL2), `MacOS` (Big Sur+) platforms, `Python 3.6`, `3.7`, `3.8`, `3.9` and `3.10`.
-    Depending on the model used, you may need from 4 to 16 GB RAM.
+## 快速开始
 
-1. Create and activate a virtual environment:
-    * `Linux`
+1. 克隆或下载本项目
+2. 直接打开`index.html`文件即可运行（无需服务器）
+3. 所有数据将保存在浏览器本地存储中
 
-    ```
-    python -m venv env
-    source ./env/bin/activate
-    ```
+## 使用说明
+1. 基本操作
+1.1 用户端界面
+主界面布局：
 
-2. Install the package inside the environment:
+顶部显示系统名称和当前时间
 
-    ```
-    pip install deeppavlov
-    ```
+中间区域展示食堂窗口卡片
 
-## QuickStart
+左侧显示"我常吃的"收藏窗口
 
-There is a bunch of great pre-trained NLP models in DeepPavlov. Each model is
-determined by its config file.
+右侧显示今日推荐窗口
 
-List of models is available on
-[the doc page](http://docs.deeppavlov.ai/en/master/features/overview.html) in
-the `deeppavlov.configs` (Python):
+1.2 商家端切换
+点击右上角"商家端"按钮可切换到商家管理界面
 
-```python
-from deeppavlov import configs
-```
+商家端需要选择具体管理的窗口后才能操作
 
-When you're decided on the model (+ config file), there are two ways to train,
-evaluate and infer it:
+2. 核心功能详解
+2.1 实时数据查看
+每个窗口卡片显示：
 
-* via [Command line interface (CLI)](#command-line-interface-cli) and
-* via [Python](#python).
+窗口名称和图片
 
-#### GPU requirements
+五分钟内新增人数
 
-By default, DeepPavlov installs models requirements from PyPI. PyTorch from PyPI could not support your device CUDA
-capability. To run supported DeepPavlov models on GPU you should have [CUDA](https://developer.nvidia.com/cuda-toolkit)
-compatible with used GPU and [PyTorch version](deeppavlov/requirements/pytorch.txt) required by DeepPavlov models.
-See [docs](https://docs.deeppavlov.ai/en/master/intro/quick_start.html#using-gpu) for details.
-GPU with Pascal or newer architecture and 4+ GB VRAM is recommended.
+一分钟内新增人数
 
-### Command line interface (CLI)
+今日总用餐人数
 
-To get predictions from a model interactively through CLI, run
+当前拥挤度状态（颜色标识）
 
-```bash
-python -m deeppavlov interact <config_path> [-d] [-i]
-```
+点击任意窗口卡片可查看详情：
 
-* `-d` downloads required data - pretrained model files and embeddings (optional).
-* `-i` installs model requirements (optional).
+弹出模态框显示更详细的数据
 
-You can train it in the same simple way:
+包含30分钟内人数变化趋势图
 
-```bash
-python -m deeppavlov train <config_path> [-d] [-i]
-```
+显示所有用户评论
 
-Dataset will be downloaded regardless of whether there was `-d` flag or not.
+2.2 "我常吃的"功能
+添加常用窗口：
 
-To train on your own data you need to modify dataset reader path in the
-[train config doc](http://docs.deeppavlov.ai/en/master/intro/config_description.html#train-config).
-The data format is specified in the corresponding model doc page.
+点击"我常吃的"区域的空位
 
-There are even more actions you can perform with configs:
+从弹出的选择器中选择要添加的窗口
 
-```bash
-python -m deeppavlov <action> <config_path> [-d] [-i]
-```
+最多可添加3个常用窗口
 
-* `<action>` can be
-  * `install` to install model requirements (same as `-i`),
-  * `download` to download model's data (same as `-d`),
-  * `train` to train the model on the data specified in the config file,
-  * `evaluate` to calculate metrics on the same dataset,
-  * `interact` to interact via CLI,
-  * `riseapi` to run a REST API server (see
-    [doc](http://docs.deeppavlov.ai/en/master/integrations/rest_api.html)),
-  * `predict` to get prediction for samples from *stdin* or from
-      *<file_path>* if `-f <file_path>` is specified.
-* `<config_path>` specifies path (or name) of model's config file
-* `-d` downloads required data
-* `-i` installs model requirements
+管理常用窗口：
 
-### Python
+点击右上角的"×"可移除收藏
 
-To get predictions from a model interactively through Python, run
+长按拖动可调整排序
 
-```python
-from deeppavlov import build_model
+2.3 评论系统
+发表评论：
 
-model = build_model(<config_path>, install=True, download=True)
+在窗口详情页底部填写表单
 
-# get predictions for 'input_text1', 'input_text2'
-model(['input_text1', 'input_text2'])
-```
+需要输入昵称和评论内容
 
-where
+提交后立即显示在评论列表
 
-* `install=True` installs model requirements (optional),
-* `download=True` downloads required data from web - pretrained model files and embeddings (optional),
-* `<config_path>` is model name (e.g. `'ner_ontonotes_bert_mult'`), path to the chosen model's config file (e.g.
-  `"deeppavlov/configs/ner/ner_ontonotes_bert_mult.json"`),  or `deeppavlov.configs` attribute (e.g.
-  `deeppavlov.configs.ner.ner_ontonotes_bert_mult` without quotation marks).
+管理评论：
 
-You can train it in the same simple way:
+用户可删除自己发表的评论
 
-```python
-from deeppavlov import train_model 
+商家可回复用户评论
 
-model = train_model(<config_path>, install=True, download=True)
-```
+3. 商家管理功能
+3.1 数据统计
+查看当日服务总人次
 
-To train on your own data you need to modify dataset reader path in the
-[train config doc](http://docs.deeppavlov.ai/en/master/intro/config_description.html#train-config).
-The data format is specified in the corresponding model doc page.
+查看平均用户评分
 
-You can also calculate metrics on the dataset specified in your config file:
+查看待回复评论数量
 
-```python
-from deeppavlov import evaluate_model 
+3.2 公告管理
+发布公告：
 
-model = evaluate_model(<config_path>, install=True, download=True)
-```
+在公告输入框填写内容
 
-DeepPavlov also [allows](https://docs.deeppavlov.ai/en/master/intro/python.html) to build a model from components for
-inference using Python.
+点击"发布公告"按钮
 
-## License
+公告将立即显示在用户端
 
-DeepPavlov is Apache 2.0 - licensed.
+删除公告：
 
-## Citation
-```
-@inproceedings{savkin-etal-2024-deeppavlov,
-    title = "DeepPavlov 1.0: Your Gateway to Advanced NLP Models Backed by Transformers and Transfer Learning",
-    author = "Savkin Maksim and Voznyuk Anastasia and Ignatov Fedor and Korzanova Anna and Karpov Dmitry and Popov Alexander and Konovalov Vasily"
-    editor = "Hernandez Farias and Delia Irazu and Hope Tom and Li Manling",
-    booktitle = "Proceedings of the 2024 Conference on Empirical Methods in Natural Language Processing: System Demonstrations",
-    month = nov,
-    year = "2024",
-    address = "Miami, Florida, USA",
-    publisher = "Association for Computational Linguistics",
-    url = "https://aclanthology.org/2024.emnlp-demo.47",
-    pages = "465--474",
-    abstract = "We present DeepPavlov 1.0, an open-source framework for using Natural Language Processing (NLP) models by leveraging transfer learning techniques. DeepPavlov 1.0 is created for modular and configuration-driven development of state-of-the-art NLP models and supports a wide range of NLP model applications. DeepPavlov 1.0 is designed for practitioners with limited knowledge of NLP/ML. DeepPavlov is based on PyTorch and supports HuggingFace transformers. DeepPavlov is publicly released under the Apache 2.0 license and provides access to an online demo.",
-}
-```
+点击"删除公告"按钮
+
+确认后公告将从用户端移除
+
+3.3 评论回复
+选择待回复评论
+
+在回复框输入内容
+
+点击"提交回复"按钮
+
+4. 高级功能
+4.1 搜索功能
+在顶部搜索框输入窗口名称
+
+系统实时过滤显示匹配的窗口
+
+自动高亮显示匹配文字
+
+4.2 Magic模式
+激活方式：
+
+点击左上角"Magic"按钮
+
+界面将显示彩虹边框特效
+
+特殊功能：
+
+拖拽排序窗口卡片
+
+卡片添加果冻动画效果
+
+交互元素添加特殊动效
+
+5. 注意事项
+数据存储：
+
+所有数据保存在浏览器本地
+
+更换设备或清除缓存将丢失数据
+
+兼容性：
+
+推荐使用Chrome或Edge最新版
+
+移动端建议横屏使用以获得最佳体验
+
+数据更新：
+
+每分钟自动更新一次数据
+
+手动刷新页面可立即获取最新数据
+### 用户端功能
+
+- 查看各窗口实时用餐人数和拥挤度
+- 收藏常用窗口到"我常吃的"区域
+- 查看今日推荐窗口
+- 发表评论和查看其他用户评价
+- 使用搜索功能快速查找窗口
+
+### 商家端功能
+
+- 查看窗口统计数据（今日服务人数、用户评分等）
+- 发布今日特惠公告
+- 回复用户评论
+- 切换管理不同窗口
+
+### Magic模式
+
+点击右上角"Magic"按钮可激活特殊效果：
+- 拖拽排序窗口卡片
+- 果冻质感动画效果
+- 彩虹边框特效
+
+## 开发指南
+
+### VS Code 推荐插件
+
+- **Live Server** - 实时预览网页
+- **Prettier** - 代码格式化
+- **ESLint** - JavaScript语法检查
+- **Auto Rename Tag** - 自动重命名配对的HTML标签
+- **CSS Peek** - 快速查看CSS定义
