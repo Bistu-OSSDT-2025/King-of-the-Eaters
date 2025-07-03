@@ -1,0 +1,3049 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>King Of Eaters - 信科食堂用餐统计系统</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+    <style>
+        /* ========== 全局样式 ========== */
+        :root {
+            --primary: #FF7F00; /* 橙色唤起食欲 */
+            --secondary: #FF6347; /* 番茄红 */
+            --success: #2ecc71;
+            --warning: #f39c12;
+            --dark: #2c3e50;
+            --light: #f8f9fa;
+            --gray: #7f8c8d;
+            --light-gray: #ecf0f1;
+            --merchant: #9b59b6;
+            --appetite-orange: #FFA500;
+            --appetite-red: #E74C3C;
+            --appetite-green: #2ECC71;
+            --appetite-yellow: #F1C40F;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #fef9e7 0%, #fdebd0 100%);
+            min-height: 100vh;
+            padding: 15px;
+            color: var(--dark);
+            position: relative;
+            overflow-x: hidden;
+            font-size: 14px; /* 减小全局字体大小 */
+        }
+
+        .container {
+            max-width: 1280px;
+            margin: 0 auto;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* ========== 背景模糊元素 ========== */
+        .bg-blur-element {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(100px);
+            z-index: -1;
+            opacity: 0.7;
+            animation: float 15s infinite ease-in-out;
+        }
+
+        .bg-blur-1 {
+            width: 200px;
+            height: 200px;
+            background: linear-gradient(135deg, #ff9a9e, #fad0c4);
+            top: 5%;
+            left: 5%;
+            animation-delay: 0s;
+        }
+
+        .bg-blur-2 {
+            width: 180px;
+            height: 180px;
+            background: linear-gradient(135deg, #ffb347, #ffcc33);
+            bottom: 10%;
+            right: 5%;
+            animation-delay: 2.5s;
+        }
+
+        .bg-blur-3 {
+            width: 150px;
+            height: 150px;
+            background: linear-gradient(135deg, #d4fc79, #96e6a1);
+            top: 50%;
+            left: 30%;
+            animation-delay: 5s;
+        }
+
+        /* ========== 头部区域 ========== */
+        header {
+            text-align: center;
+            padding: 20px 0;
+            margin-bottom: 20px;
+            background: rgba(255, 255, 255, 0.92);
+            border-radius: 24px;
+            backdrop-filter: blur(15px);
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.8);
+            position: relative;
+            overflow: hidden;
+        }
+
+        header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: linear-gradient(90deg, var(--appetite-orange), var(--appetite-red));
+        }
+
+        h1 {
+            font-size: 2.2rem; /* 减小标题大小 */
+            color: var(--dark);
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px; /* 减小间隙 */
+            font-weight: 800;
+            letter-spacing: -0.5px;
+            padding: 0 15px;
+        }
+
+        .subtitle {
+            font-size: 1rem; /* 减小副标题大小 */
+            color: var(--gray);
+            max-width: 700px;
+            margin: 12px auto 0;
+            line-height: 1.5;
+            font-weight: 400;
+            padding: 0 15px;
+        }
+
+        /* 搜索栏样式 */
+        .search-container {
+            display: flex;
+            max-width: 600px;
+            margin: 20px auto 0;
+            position: relative;
+            padding: 0 15px;
+        }
+
+        .search-box {
+            flex: 1;
+            padding: 14px 20px; /* 减小内边距 */
+            border-radius: 25px;
+            border: 2px solid rgba(255, 127, 0, 0.15);
+            background: rgba(255, 255, 255, 0.9);
+            font-size: 1rem; /* 减小字体大小 */
+            color: var(--dark);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+            transition: all 0.3s ease;
+            backdrop-filter: blur(5px);
+        }
+
+        .search-box:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 4px rgba(255, 127, 0, 0.2);
+        }
+
+        .search-btn {
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: transparent;
+            border: none;
+            color: var(--primary);
+            font-size: 1.1rem; /* 减小图标大小 */
+            cursor: pointer;
+            width: 40px; /* 减小按钮大小 */
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            transition: all 0.3s ease;
+        }
+
+        .search-btn:hover {
+            background: rgba(255, 127, 0, 0.1);
+            transform: translateY(-50%) scale(1.1);
+        }
+
+        .update-time {
+            text-align: center;
+            margin: 15px 0 0;
+            color: var(--gray);
+            font-size: 0.9rem; /* 减小字体大小 */
+            background: rgba(255, 255, 255, 0.8);
+            padding: 10px 20px; /* 减小内边距 */
+            border-radius: 25px;
+            display: inline-block;
+            backdrop-filter: blur(5px);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            font-weight: 500;
+            width: 90%;
+        }
+
+        /* ========== 角色切换 ========== */
+        .role-switcher {
+            position: relative;
+            display: flex;
+            background: rgba(255, 255, 255, 0.92);
+            border-radius: 24px;
+            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+            backdrop-filter: blur(8px);
+            z-index: 10;
+            border: 1px solid rgba(255, 255, 255, 0.6);
+            margin: 15px auto;
+            width: 90%;
+        }
+
+        .role-btn {
+            padding: 12px 20px; /* 减小内边距 */
+            font-size: 0.95rem; /* 减小字体大小 */
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px; /* 减小间隙 */
+            flex: 1;
+            justify-content: center;
+        }
+
+        .role-btn.user {
+            background: var(--primary);
+            color: white;
+        }
+
+        .role-btn.merchant {
+            background: transparent;
+            color: var(--merchant);
+        }
+
+        .role-btn.merchant.active {
+            background: var(--merchant);
+            color: white;
+        }
+
+        /* ========== 统计卡片 ========== */
+        .dashboard {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px; /* 减小间隙 */
+            margin-bottom: 25px;
+        }
+
+        .stats-card {
+            flex: 1;
+            min-width: 100%; /* 移动端全宽 */
+            background: rgba(255, 255, 255, 0.92);
+            border-radius: 24px;
+            padding: 25px 20px; /* 减小内边距 */
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
+            text-align: center;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            backdrop-filter: blur(15px);
+            position: relative;
+            overflow: hidden;
+            border: 1px solid rgba(255, 255, 255, 0.7);
+            will-change: transform, box-shadow;
+        }
+
+        .stats-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.15);
+        }
+
+        .stats-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 5px;
+            background: var(--primary);
+        }
+
+        .stats-icon {
+            font-size: 2.5rem; /* 减小图标大小 */
+            margin-bottom: 20px; /* 减小下边距 */
+            color: var(--primary);
+            transition: transform 0.3s ease;
+        }
+
+        .stats-card:hover .stats-icon {
+            transform: scale(1.1);
+        }
+
+        .stats-title {
+            font-size: 1rem; /* 减小字体大小 */
+            color: var(--gray);
+            margin-bottom: 12px; /* 减小下边距 */
+            font-weight: 500;
+            letter-spacing: 0.5px;
+        }
+
+        .stats-value {
+            font-size: 2.2rem; /* 减小字体大小 */
+            font-weight: 800;
+            color: var(--dark);
+            transition: all 0.3s ease;
+            display: inline-block;
+        }
+
+        .stats-card:hover .stats-value {
+            color: var(--primary);
+        }
+
+        /* ========== "我常吃的"组件样式 ========== */
+        .my-favorites {
+            background: rgba(255, 255, 255, 0.92);
+            border-radius: 24px;
+            padding: 20px;
+            margin: 20px 0;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
+            position: relative;
+            overflow: hidden;
+            backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.7);
+        }
+
+        .my-favorites::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 5px;
+            background: linear-gradient(90deg, #e74c3c, #f39c12, #f1c40f);
+            border-radius: 24px 24px 0 0;
+        }
+
+        .favorites-title {
+            display: flex;
+            align-items: center;
+            gap: 12px; /* 减小间隙 */
+            margin-bottom: 20px; /* 减小下边距 */
+            color: var(--dark);
+        }
+
+        .favorites-title i {
+            color: #e74c3c;
+            font-size: 1.5rem; /* 减小图标大小 */
+            background: rgba(231, 76, 60, 0.1);
+            width: 40px; /* 减小容器大小 */
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .favorites-title h2 {
+            font-size: 1.5rem; /* 减小字体大小 */
+            font-weight: 800;
+        }
+
+        .favorites-grid {
+            display: grid;
+            grid-template-columns: repeat(1, 1fr); /* 移动端单列 */
+            gap: 15px; /* 减小间隙 */
+        }
+
+        .favorite-slot {
+            background: rgba(248, 249, 250, 0.92);
+            border-radius: 18px;
+            padding: 20px 15px; /* 减小内边距 */
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(12px);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            border: 2px dashed #ddd;
+            cursor: pointer;
+            min-height: 140px; /* 减小高度 */
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .favorite-slot.empty {
+            border-color: rgba(255, 127, 0, 0.3);
+        }
+
+        .favorite-slot.empty:hover {
+            background: rgba(255, 127, 0, 0.1);
+            border-color: var(--primary);
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(255, 127, 0, 0.2);
+        }
+
+        .favorite-slot.filled {
+            border: 2px solid #e74c3c;
+            background: rgba(255, 255, 255, 0.95);
+            cursor: pointer;
+        }
+
+        .favorite-slot.filled:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(231, 76, 60, 0.2);
+            border-color: #c0392b;
+        }
+
+        .empty-placeholder {
+            color: var(--gray);
+            font-size: 1rem; /* 减小字体大小 */
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px; /* 减小间隙 */
+        }
+
+        .empty-placeholder i {
+            font-size: 2rem; /* 减小图标大小 */
+            opacity: 0.6;
+        }
+
+        .favorite-window {
+            position: relative;
+            width: 100%;
+        }
+
+        .favorite-window-name {
+            font-size: 1.1rem; /* 减小字体大小 */
+            font-weight: 700;
+            color: var(--dark);
+            margin-bottom: 8px; /* 减小下边距 */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px; /* 减小间隙 */
+        }
+
+        .favorite-window-stats {
+            color: var(--gray);
+            font-size: 0.9rem; /* 减小字体大小 */
+            margin-bottom: 12px; /* 减小下边距 */
+        }
+
+        .favorite-congestion {
+            display: inline-block;
+            padding: 5px 10px; /* 减小内边距 */
+            border-radius: 12px;
+            font-size: 0.85rem; /* 减小字体大小 */
+            font-weight: bold;
+        }
+
+        .remove-favorite {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            background: #e74c3c;
+            color: white;
+            border: none;
+            width: 22px; /* 减小按钮大小 */
+            height: 22px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.7rem; /* 减小字体大小 */
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 6px rgba(231, 76, 60, 0.3);
+            z-index: 10;
+        }
+
+        .remove-favorite:hover {
+            background: #c0392b;
+            transform: scale(1.1);
+            box-shadow: 0 3px 10px rgba(231, 76, 60, 0.4);
+        }
+
+        /* 窗口选择器样式 */
+        .window-selector {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s;
+            z-index: 2000;
+            backdrop-filter: blur(10px);
+        }
+
+        .window-selector.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .selector-content {
+            background: rgba(255, 255, 255, 0.98);
+            border-radius: 28px;
+            width: 95%; /* 增加宽度 */
+            max-width: 700px;
+            padding: 30px; /* 减小内边距 */
+            position: relative;
+            transform: translateY(60px);
+            transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            max-height: 80vh;
+            overflow-y: auto;
+            backdrop-filter: blur(25px);
+            border: 1px solid rgba(255, 255, 255, 0.8);
+            box-shadow: 0 25px 60px rgba(0,0,0,0.3);
+        }
+
+        .window-selector.active .selector-content {
+            transform: translateY(0);
+        }
+
+        .close-selector {
+            position: absolute;
+            top: 15px; /* 减小位置 */
+            right: 15px;
+            font-size: 1.3rem; /* 减小字体大小 */
+            color: var(--gray);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: rgba(255, 255, 255, 0.85);
+            width: 35px; /* 减小按钮大小 */
+            height: 35px;
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(5px);
+            box-shadow: 0 3px 12px rgba(0,0,0,0.1);
+        }
+
+        .close-selector:hover {
+            color: var(--secondary);
+            background: rgba(255, 255, 255, 0.95);
+            transform: rotate(90deg);
+        }
+
+        .selector-header {
+            text-align: center;
+            margin-bottom: 25px; /* 减小下边距 */
+            padding-bottom: 15px; /* 减小内边距 */
+            border-bottom: 2px solid rgba(236, 240, 241, 0.8);
+        }
+
+        .selector-title {
+            font-size: 1.5rem; /* 减小字体大小 */
+            color: var(--dark);
+            margin-bottom: 6px; /* 减小下边距 */
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px; /* 减小间隙 */
+        }
+
+        .selector-subtitle {
+            color: var(--gray);
+            font-size: 0.9rem; /* 减小字体大小 */
+        }
+
+        .window-options {
+            display: grid;
+            grid-template-columns: repeat(1, 1fr); /* 移动端单列 */
+            gap: 15px; /* 减小间隙 */
+        }
+
+        .window-option {
+            background: rgba(248, 249, 250, 0.75);
+            border-radius: 18px;
+            padding: 15px; /* 减小内边距 */
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+            position: relative;
+            backdrop-filter: blur(5px);
+            box-shadow: 0 3px 12px rgba(0,0,0,0.05);
+        }
+
+        .window-option:hover {
+            transform: translateY(-3px);
+            border-color: rgba(255, 127, 0, 0.3);
+            box-shadow: 0 6px 20px rgba(255, 127, 0, 0.15);
+        }
+
+        .window-option.selected {
+            border-color: #e74c3c;
+            background: rgba(231, 76, 60, 0.1);
+        }
+
+        .window-option.disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            pointer-events: none;
+        }
+
+        .option-name {
+            font-size: 1.1rem; /* 减小字体大小 */
+            font-weight: 700;
+            color: var(--dark);
+            margin-bottom: 6px; /* 减小下边距 */
+            display: flex;
+            align-items: center;
+            gap: 6px; /* 减小间隙 */
+        }
+
+        .option-stats {
+            color: var(--gray);
+            font-size: 0.85rem; /* 减小字体大小 */
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px; /* 减小下边距 */
+        }
+
+        .option-congestion {
+            text-align: center;
+        }
+
+        /* ========== 公告区域 - 缩小面积 ========== */
+        .announcement {
+            background: rgba(255, 255, 255, 0.92);
+            border-radius: 24px;
+            padding: 20px; /* 减少内边距 */
+            margin: 20px 0; /* 减少外边距 */
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
+            position: relative;
+            overflow: hidden;
+            backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.7);
+        }
+
+        .announcement::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 5px;
+            background: linear-gradient(90deg, #a1c4fd, #c2e9fb, #d4fc79, #96e6a1);
+            border-radius: 24px 24px 0 0;
+        }
+
+        .announce-title {
+            display: flex;
+            align-items: center;
+            gap: 12px; /* 减小间隙 */
+            margin-bottom: 15px; /* 减少下边距 */
+            color: var(--dark);
+        }
+
+        .announce-title i {
+            color: var(--primary);
+            font-size: 1.5rem; /* 减小图标大小 */
+            background: rgba(255, 127, 0, 0.1);
+            width: 40px; /* 减小容器大小 */
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .announce-title h2 {
+            font-size: 1.4rem; /* 减小标题大小 */
+            font-weight: 800;
+        }
+
+        .announce-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px; /* 减少间距 */
+        }
+
+        .announce-card {
+            background: rgba(248, 249, 250, 0.92);
+            border-radius: 18px; /* 减小圆角 */
+            padding: 15px; /* 减少内边距 */
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(12px);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            border-left: 4px solid var(--merchant);
+        }
+
+        .announce-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+        }
+
+        .announce-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 10px; /* 减少下边距 */
+        }
+
+        .announce-window {
+            font-weight: 700;
+            color: var(--merchant);
+            font-size: 1rem; /* 减小字体大小 */
+            display: flex;
+            align-items: center;
+            gap: 8px; /* 减少间距 */
+        }
+
+        .announce-date {
+            color: var(--gray);
+            font-size: 0.8rem; /* 减小字体大小 */
+        }
+
+        .announce-content {
+            color: var(--dark);
+            line-height: 1.5;
+            font-size: 0.95rem; /* 减小字体大小 */
+            padding-right: 20px; /* 减少右边距 */
+        }
+
+        /* ========== 推荐区域 ========== */
+        .recommendation {
+            background: rgba(255, 255, 255, 0.92);
+            border-radius: 24px;
+            padding: 25px; /* 减小内边距 */
+            margin: 30px 0; /* 减小外边距 */
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
+            position: relative;
+            overflow: hidden;
+            backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.7);
+        }
+
+        .recommendation::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 5px;
+            background: linear-gradient(90deg, #ff9a9e, #fad0c4, #ffb347, #ffcc33);
+            border-radius: 24px 24px 0 0;
+        }
+
+        .rec-title {
+            display: flex;
+            align-items: center;
+            gap: 12px; /* 减小间隙 */
+            margin-bottom: 20px; /* 减小下边距 */
+            color: var(--dark);
+        }
+
+        .rec-title i {
+            color: var(--secondary);
+            font-size: 1.8rem; /* 减小图标大小 */
+            background: rgba(255, 99, 71, 0.1);
+            width: 45px; /* 减小容器大小 */
+            height: 45px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .rec-title h2 {
+            font-size: 1.7rem; /* 减小字体大小 */
+            font-weight: 800;
+        }
+
+        .rec-subtitle {
+            color: var(--gray);
+            margin-bottom: 20px; /* 减小下边距 */
+            font-size: 1rem; /* 减小字体大小 */
+            max-width: 800px;
+            margin-left: auto;
+            margin-right: auto;
+            line-height: 1.6;
+            padding: 0 10px;
+        }
+
+        .rec-windows {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px; /* 减小间隙 */
+            justify-content: center;
+        }
+
+        .rec-card {
+            flex: 1;
+            min-width: 100%; /* 移动端全宽 */
+            background: rgba(248, 249, 250, 0.92);
+            border-radius: 24px;
+            padding: 25px 20px; /* 减小内边距 */
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            border: 2px solid transparent;
+            cursor: pointer;
+            backdrop-filter: blur(12px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.05);
+            will-change: transform, box-shadow;
+        }
+
+        .rec-card:hover {
+            transform: translateY(-6px) scale(1.02);
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.12);
+            border-color: rgba(255, 127, 0, 0.3);
+        }
+
+        .rec-rank {
+            position: absolute;
+            top: 15px; /* 减小位置 */
+            left: 15px;
+            width: 40px; /* 减小大小 */
+            height: 40px;
+            background: var(--secondary);
+            color: white;
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 1.2rem; /* 减小字体大小 */
+            box-shadow: 0 4px 15px rgba(255, 99, 71, 0.3);
+        }
+
+        .rec-name {
+            font-size: 1.4rem; /* 减小字体大小 */
+            font-weight: 800;
+            margin: 15px 0 10px; /* 减小外边距 */
+            color: var(--dark);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px; /* 减小间隙 */
+            transition: color 0.3s ease;
+        }
+
+        .rec-card:hover .rec-name {
+            color: var(--primary);
+        }
+
+        .rec-total {
+            font-size: 2rem; /* 减小字体大小 */
+            font-weight: 900;
+            color: var(--secondary);
+            margin: 10px 0; /* 减小外边距 */
+            transition: all 0.3s ease;
+        }
+
+        .rec-card:hover .rec-total {
+            transform: scale(1.1);
+        }
+
+        .rec-label {
+            color: var(--gray);
+            font-size: 0.95rem; /* 减小字体大小 */
+            margin-bottom: 15px; /* 减小下边距 */
+            letter-spacing: 0.5px;
+        }
+
+        .rec-medal {
+            margin-top: 15px; /* 减小上边距 */
+            font-size: 3rem; /* 减小图标大小 */
+            transition: transform 0.5s ease;
+        }
+
+        .rec-card:hover .rec-medal {
+            transform: rotate(10deg) scale(1.1);
+        }
+
+        .gold {
+            color: #ffd700;
+            text-shadow: 0 2px 8px rgba(255, 215, 0, 0.4);
+        }
+
+        .silver {
+            color: #c0c0c0;
+            text-shadow: 0 2px 8px rgba(192, 192, 192, 0.4);
+        }
+
+        .bronze {
+            color: #cd7f32;
+            text-shadow: 0 2px 8px rgba(205, 127, 50, 0.4);
+        }
+
+        /* ========== 拥挤度指示器 ========== */
+        .congestion {
+            display: inline-block;
+            padding: 8px 15px; /* 减小内边距 */
+            border-radius: 20px;
+            font-size: 0.95rem; /* 减小字体大小 */
+            font-weight: bold;
+            margin-top: 10px; /* 减小上边距 */
+            backdrop-filter: blur(5px);
+            transition: all 0.3s ease;
+        }
+
+        .low-congestion {
+            background-color: rgba(46, 204, 113, 0.9);
+            color: white;
+        }
+
+        .medium-congestion {
+            background-color: rgba(243, 156, 18, 0.9);
+            color: white;
+        }
+
+        .high-congestion {
+            background-color: rgba(231, 76, 60, 0.9);
+            color: white;
+        }
+
+        /* ========== 功能区域 ========== */
+        .features {
+            display: grid;
+            grid-template-columns: repeat(1, 1fr); /* 移动端单列 */
+            gap: 20px; /* 减小间隙 */
+            margin: 35px 0; /* 减小外边距 */
+        }
+
+        .feature-card {
+            background: rgba(255, 255, 255, 0.92);
+            border-radius: 24px;
+            padding: 25px; /* 减小内边距 */
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.7);
+            will-change: transform, box-shadow;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-6px);
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.15);
+        }
+
+        .feature-title {
+            font-size: 1.4rem; /* 减小字体大小 */
+            color: var(--dark);
+            margin-bottom: 20px; /* 减小下边距 */
+            display: flex;
+            align-items: center;
+            gap: 15px; /* 减小间隙 */
+            font-weight: 800;
+        }
+
+        .feature-title i {
+            width: 50px; /* 减小容器大小 */
+            height: 50px;
+            background: rgba(255, 127, 0, 0.1);
+            border-radius: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem; /* 减小图标大小 */
+            color: var(--primary);
+        }
+
+        .feature-content {
+            color: var(--gray);
+            line-height: 1.6;
+            font-size: 1rem; /* 减小字体大小 */
+        }
+
+        .peak-times {
+            margin-top: 20px; /* 减小上边距 */
+        }
+
+        .time-slot {
+            display: flex;
+            justify-content: space-between;
+            padding: 12px 0; /* 减小内边距 */
+            border-bottom: 1px solid #eee;
+        }
+
+        .time-label {
+            font-weight: 600;
+            color: var(--dark);
+            font-size: 1rem; /* 减小字体大小 */
+        }
+
+        .time-value {
+            color: var(--secondary);
+            font-weight: bold;
+            font-size: 1rem; /* 减小字体大小 */
+        }
+
+        /* ========== 食堂窗口区域 ========== */
+        .food-court-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin: 30px 0 20px; /* 减小外边距 */
+            padding-bottom: 15px; /* 减小内边距 */
+            border-bottom: 2px solid rgba(236, 240, 241, 0.8);
+        }
+
+        .food-court-header h2 {
+            color: var(--dark);
+            display: flex;
+            align-items: center;
+            gap: 12px; /* 减小间隙 */
+            font-size: 1.6rem; /* 减小字体大小 */
+            font-weight: 800;
+        }
+
+        .food-court-header i {
+            color: var(--primary);
+            font-size: 1.6rem; /* 减小图标大小 */
+        }
+
+        .food-court {
+            display: grid;
+            grid-template-columns: repeat(1, 1fr); /* 移动端单列 */
+            gap: 20px; /* 减小间隙 */
+            margin-bottom: 40px; /* 减小下边距 */
+        }
+
+        .window-card {
+            background: rgba(255, 255, 255, 0.92);
+            border-radius: 24px;
+            overflow: hidden;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            cursor: pointer;
+            position: relative;
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.7);
+            will-change: transform, box-shadow;
+            opacity: 1;
+            transform: scale(1);
+            transition: all 0.4s ease;
+        }
+
+        .window-card.hidden {
+            opacity: 0.3;
+            transform: scale(0.95);
+        }
+
+        .window-card:hover {
+            transform: translateY(-6px);
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.15);
+        }
+
+        .window-image {
+            height: 180px; /* 减小高度 */
+            background-size: cover;
+            background-position: center;
+            border-radius: 24px 24px 0 0;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .favorite-btn {
+            position: absolute;
+            top: 20px; /* 减小位置 */
+            right: 20px;
+            background: rgba(255, 255, 255, 0.95);
+            border: none;
+            width: 40px; /* 减小按钮大小 */
+            height: 40px;
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.3rem; /* 减小图标大小 */
+            color: #ddd;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            z-index: 10;
+        }
+
+        .favorite-btn:hover {
+            transform: scale(1.1);
+        }
+
+        .favorite-btn.active {
+            color: var(--secondary);
+        }
+
+        .popular {
+            position: absolute;
+            top: 20px; /* 减小位置 */
+            right: -30px; /* 调整位置 */
+            background: var(--secondary);
+            color: white;
+            padding: 8px 35px; /* 减小内边距 */
+            transform: rotate(45deg);
+            font-weight: bold;
+            font-size: 0.9rem; /* 减小字体大小 */
+            box-shadow: 0 4px 15px rgba(231, 76, 60, 0.3);
+        }
+
+        .window-info {
+            padding: 20px; /* 减小内边距 */
+        }
+
+        .window-name {
+            font-size: 1.4rem; /* 减小字体大小 */
+            font-weight: 800;
+            margin-bottom: 20px; /* 减小下边距 */
+            display: flex;
+            align-items: center;
+            gap: 12px; /* 减小间隙 */
+            color: var(--dark);
+            transition: color 0.3s ease;
+        }
+
+        .highlight {
+            background-color: rgba(255, 165, 0, 0.3);
+            padding: 0 4px;
+            border-radius: 4px;
+        }
+
+        .window-card:hover .window-name {
+            color: var(--primary);
+        }
+
+        .window-stats {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 12px; /* 减小下边距 */
+            padding: 10px 0; /* 减小内边距 */
+            border-bottom: 1px dashed rgba(236, 240, 241, 0.8);
+        }
+
+        .stat-label {
+            color: var(--gray);
+            font-size: 1rem; /* 减小字体大小 */
+        }
+
+        .stat-value {
+            font-weight: 700;
+            color: var(--dark);
+            font-size: 1rem; /* 减小字体大小 */
+        }
+
+        /* ========== 详情模态框 ========== */
+        .detail-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s;
+            z-index: 1000;
+            backdrop-filter: blur(10px);
+        }
+
+        .detail-modal.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal-content {
+            background: rgba(255, 255, 255, 0.98);
+            border-radius: 28px;
+            width: 95%; /* 增加宽度 */
+            max-width: 550px;
+            padding: 30px; /* 减小内边距 */
+            position: relative;
+            transform: translateY(60px);
+            transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            max-height: 90vh;
+            overflow-y: auto;
+            backdrop-filter: blur(25px);
+            border: 1px solid rgba(255, 255, 255, 0.8);
+            box-shadow: 0 25px 60px rgba(0,0,0,0.3);
+        }
+
+        .detail-modal.active .modal-content {
+            transform: translateY(0);
+        }
+
+        .close-modal {
+            position: absolute;
+            top: 20px; /* 减小位置 */
+            right: 20px;
+            font-size: 1.5rem; /* 减小字体大小 */
+            color: var(--gray);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: rgba(255, 255, 255, 0.85);
+            width: 40px; /* 减小按钮大小 */
+            height: 40px;
+            border-radius: 25px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(5px);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            z-index: 10;
+        }
+
+        .close-modal:hover {
+            color: var(--secondary);
+            background: rgba(255, 255, 255, 0.95);
+            transform: rotate(90deg);
+        }
+
+        .modal-header {
+            text-align: center;
+            margin-bottom: 25px; /* 减小下边距 */
+            padding-bottom: 20px; /* 减小内边距 */
+            border-bottom: 2px solid rgba(236, 240, 241, 0.8);
+            position: relative;
+        }
+
+        .modal-header::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 25%;
+            width: 50%;
+            height: 4px;
+            background: var(--primary);
+            border-radius: 4px;
+        }
+
+        .modal-title {
+            font-size: 1.8rem; /* 减小字体大小 */
+            color: var(--dark);
+            margin-bottom: 8px; /* 减小下边距 */
+            font-weight: 800;
+        }
+
+        .modal-subtitle {
+            color: var(--gray);
+            font-size: 1rem; /* 减小字体大小 */
+        }
+
+        .modal-stats {
+            margin: 25px 0; /* 减小外边距 */
+        }
+
+        .modal-stat {
+            display: flex;
+            justify-content: space-between;
+            padding: 15px 20px; /* 减小内边距 */
+            margin-bottom: 15px; /* 减小下边距 */
+            border-radius: 18px;
+            background: rgba(248, 249, 250, 0.75);
+            backdrop-filter: blur(5px);
+            transition: transform 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+        }
+
+        .modal-stat:hover {
+            transform: translateX(5px);
+        }
+
+        .modal-stat-label {
+            font-weight: 700;
+            color: var(--dark);
+            font-size: 1rem; /* 减小字体大小 */
+        }
+
+        .modal-stat-value {
+            font-size: 1.4rem; /* 减小字体大小 */
+            font-weight: 800;
+            color: var(--primary);
+        }
+
+        .trend-chart {
+            height: 180px; /* 减小高度 */
+            background: rgba(248, 249, 250, 0.75);
+            border-radius: 18px;
+            margin-top: 30px; /* 减小上边距 */
+            padding: 20px; /* 减小内边距 */
+            position: relative;
+            overflow: hidden;
+            backdrop-filter: blur(5px);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+        }
+
+        .chart-title {
+            text-align: center;
+            color: var(--gray);
+            margin-bottom: 20px; /* 减小下边距 */
+            font-size: 0.95rem; /* 减小字体大小 */
+            font-weight: 500;
+        }
+
+        .bars {
+            display: flex;
+            align-items: flex-end;
+            justify-content: space-around;
+            height: 110px; /* 减小高度 */
+            padding: 0 15px; /* 减小内边距 */
+        }
+
+        .bar {
+            width: 35px; /* 减小宽度 */
+            background: linear-gradient(to top, var(--primary), var(--success));
+            border-radius: 10px 10px 0 0;
+            position: relative;
+            transition: height 0.5s;
+            transform-origin: bottom;
+            animation: grow 0.8s ease-out forwards;
+            opacity: 0;
+            transform: scaleY(0);
+        }
+
+        .bar:nth-child(1) { animation-delay: 0.1s; }
+        .bar:nth-child(2) { animation-delay: 0.2s; }
+        .bar:nth-child(3) { animation-delay: 0.3s; }
+        .bar:nth-child(4) { animation-delay: 0.4s; }
+        .bar:nth-child(5) { animation-delay: 0.5s; }
+        .bar:nth-child(6) { animation-delay: 0.6s; }
+
+        .bar-label {
+            position: absolute;
+            bottom: -30px; /* 调整位置 */
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 0.8rem; /* 减小字体大小 */
+            color: var(--gray);
+            font-weight: 500;
+        }
+
+        /* ========== 评论区域 ========== */
+        .comments-section {
+            margin-top: 30px; /* 减小上边距 */
+            border-top: 2px solid rgba(236, 240, 241, 0.8);
+            padding-top: 20px; /* 减小内边距 */
+        }
+
+        .comments-title {
+            font-size: 1.4rem; /* 减小字体大小 */
+            color: var(--dark);
+            margin-bottom: 20px; /* 减小下边距 */
+            display: flex;
+            align-items: center;
+            gap: 15px; /* 减小间隙 */
+            font-weight: 800;
+        }
+
+        .comments-title i {
+            color: var(--primary);
+            background: rgba(255, 127, 0, 0.1);
+            width: 45px; /* 减小容器大小 */
+            height: 45px;
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.3rem; /* 减小图标大小 */
+        }
+
+        .comment-form {
+            margin-bottom: 25px; /* 减小下边距 */
+            background: rgba(248, 249, 250, 0.75);
+            padding: 20px; /* 减小内边距 */
+            border-radius: 24px;
+            backdrop-filter: blur(5px);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+        }
+
+        .comment-form h4 {
+            font-size: 1.2rem; /* 减小字体大小 */
+            color: var(--dark);
+            margin-bottom: 20px; /* 减小下边距 */
+            font-weight: 700;
+        }
+
+        .form-group {
+            margin-bottom: 20px; /* 减小下边距 */
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 10px; /* 减小下边距 */
+            font-weight: 700;
+            color: var(--dark);
+            font-size: 1rem; /* 减小字体大小 */
+        }
+
+        .form-group input, .form-group textarea {
+            width: 100%;
+            padding: 14px; /* 减小内边距 */
+            border: 1px solid #ddd;
+            border-radius: 18px;
+            font-size: 1rem; /* 减小字体大小 */
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(5px);
+            transition: all 0.3s ease;
+        }
+
+        .form-group input:focus, .form-group textarea:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 4px rgba(255, 127, 0, 0.2);
+            outline: none;
+        }
+
+        .form-group textarea {
+            min-height: 120px; /* 减小高度 */
+            resize: vertical;
+        }
+
+        .btn {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 14px 25px; /* 减小内边距 */
+            border-radius: 18px;
+            font-size: 1rem; /* 减小字体大小 */
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(5px);
+            display: inline-flex;
+            align-items: center;
+            gap: 10px; /* 减小间隙 */
+            box-shadow: 0 4px 15px rgba(255, 127, 0, 0.3);
+        }
+        
+        .btn.merchant {
+            background: var(--merchant);
+            box-shadow: 0 4px 15px rgba(155, 89, 182, 0.3);
+        }
+        
+        .btn.merchant:hover {
+            background: #8e44ad;
+            box-shadow: 0 8px 20px rgba(155, 89, 182, 0.4);
+        }
+
+        .btn:hover {
+            background: #e67300;
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(255, 127, 0, 0.4);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .comments-list {
+            max-height: 300px; /* 减小高度 */
+            overflow-y: auto;
+            padding-right: 10px; /* 减小内边距 */
+        }
+
+        .comment {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 20px; /* 减小内边距 */
+            margin-bottom: 20px; /* 减小下边距 */
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            border-left: 4px solid var(--primary);
+            position: relative;
+            backdrop-filter: blur(5px);
+            transition: transform 0.3s ease;
+        }
+
+        .comment:hover {
+            transform: translateX(5px);
+        }
+
+        .comment-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 15px; /* 减小下边距 */
+            align-items: center;
+        }
+
+        .comment-author {
+            font-weight: 800;
+            color: var(--dark);
+            font-size: 1.05rem; /* 减小字体大小 */
+        }
+
+        .comment-date {
+            color: var(--gray);
+            font-size: 0.85rem; /* 减小字体大小 */
+        }
+
+        .comment-content {
+            color: var(--dark);
+            line-height: 1.6;
+            font-size: 1rem; /* 减小字体大小 */
+            padding-right: 40px; /* 减小内边距 */
+        }
+        
+        .comment-reply {
+            margin-top: 15px; /* 减小上边距 */
+            padding-top: 15px;
+            border-top: 1px dashed #eee;
+            color: var(--merchant);
+            font-weight: 600;
+            font-style: italic;
+            font-size: 0.95rem; /* 减小字体大小 */
+        }
+
+        .delete-comment {
+            position: absolute;
+            top: 20px; /* 减小位置 */
+            right: 20px;
+            background: none;
+            border: none;
+            color: var(--secondary);
+            cursor: pointer;
+            font-size: 1.1rem; /* 减小字体大小 */
+            opacity: 0.9;
+            transition: all 0.3s ease;
+            background: rgba(255, 255, 255, 0.85);
+            width: 35px; /* 减小按钮大小 */
+            height: 35px;
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(5px);
+            z-index: 5;
+        }
+
+        .delete-comment:hover {
+            opacity: 1;
+            background: rgba(255, 255, 255, 0.95);
+            transform: scale(1.1);
+            box-shadow: 0 4px 15px rgba(231, 76, 60, 0.3);
+        }
+
+        .no-comments {
+            text-align: center;
+            padding: 25px; /* 减小内边距 */
+            color: var(--gray);
+            font-style: italic;
+            font-size: 1.05rem; /* 减小字体大小 */
+        }
+
+        /* ========== 页脚 ========== */
+        footer {
+            text-align: center;
+            padding: 30px 0; /* 减小内边距 */
+            color: var(--gray);
+            font-size: 0.95rem; /* 减小字体大小 */
+            border-top: 1px solid rgba(236, 240, 241, 0.8);
+            margin-top: 20px; /* 减小上边距 */
+            background: rgba(255, 255, 255, 0.92);
+            border-radius: 24px;
+            backdrop-filter: blur(15px);
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.7);
+        }
+
+        /* ========== 数据库状态指示器 ========== */
+        .db-status {
+            position: fixed;
+            bottom: 20px; /* 减小位置 */
+            right: 20px;
+            background: rgba(46, 204, 113, 0.95);
+            color: white;
+            padding: 12px 20px; /* 减小内边距 */
+            border-radius: 24px;
+            font-size: 0.9rem; /* 减小字体大小 */
+            box-shadow: 0 6px 20px rgba(0,0,0,0.2);
+            display: flex;
+            align-items: center;
+            gap: 10px; /* 减小间隙 */
+            z-index: 1001;
+            backdrop-filter: blur(5px);
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .db-status:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.25);
+        }
+
+        .db-status.connecting {
+            background: rgba(243, 156, 18, 0.95);
+        }
+
+        .db-status.error {
+            background: rgba(231, 76, 60, 0.95);
+        }
+        
+        /* ========== 加载动画 ========== */
+        .loader {
+            display: inline-block;
+            width: 20px; /* 减小大小 */
+            height: 20px;
+            border: 2px solid rgba(255,255,255,0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        /* ========== 数据状态提示 ========== */
+        .data-status {
+            position: fixed;
+            top: 20px; /* 减小位置 */
+            right: 20px;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 24px;
+            padding: 15px 20px; /* 减小内边距 */
+            box-shadow: 0 6px 20px rgba(0,0,0,0.2);
+            display: flex;
+            align-items: center;
+            gap: 10px; /* 减小间隙 */
+            z-index: 1002;
+            backdrop-filter: blur(5px);
+            transform: translateY(-120px);
+            transition: transform 0.4s ease;
+            font-weight: 600;
+            font-size: 0.95rem; /* 减小字体大小 */
+        }
+
+        .data-status.show {
+            transform: translateY(0);
+        }
+
+        .data-status.success {
+            color: #2ecc71;
+            border-left: 4px solid #2ecc71; /* 减小边框大小 */
+        }
+
+        .data-status.error {
+            color: #e74c3c;
+            border-left: 4px solid #e74c3c;
+        }
+        
+        /* ========== 商家端样式 ========== */
+        .merchant-section {
+            display: none;
+        }
+        
+        .merchant-section.active {
+            display: block;
+        }
+        
+        .merchant-welcome {
+            text-align: center;
+            background: rgba(155, 89, 182, 0.1);
+            padding: 25px; /* 减小内边距 */
+            border-radius: 24px;
+            margin-bottom: 25px; /* 减小下边距 */
+            backdrop-filter: blur(5px);
+            border: 1px solid rgba(155, 89, 182, 0.2);
+            position: relative;
+        }
+        
+        .merchant-welcome h2 {
+            color: var(--merchant);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px; /* 减小间隙 */
+            margin-bottom: 15px; /* 减小下边距 */
+            font-size: 1.5rem; /* 减小字体大小 */
+        }
+        
+        .merchant-welcome p {
+            color: var(--dark);
+            max-width: 850px;
+            margin: 0 auto;
+            line-height: 1.6;
+            font-size: 1rem; /* 减小字体大小 */
+        }
+        
+        .merchant-stats {
+            display: grid;
+            grid-template-columns: repeat(1, 1fr); /* 移动端单列 */
+            gap: 20px; /* 减小间隙 */
+            margin-bottom: 30px; /* 减小下边距 */
+        }
+        
+        .merchant-card {
+            background: rgba(255, 255, 255, 0.92);
+            border-radius: 24px;
+            padding: 25px 20px; /* 减小内边距 */
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
+            text-align: center;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            backdrop-filter: blur(15px);
+            position: relative;
+            overflow: hidden;
+            border: 1px solid rgba(255, 255, 255, 0.7);
+        }
+        
+        .merchant-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 5px;
+            background: var(--merchant);
+        }
+        
+        .merchant-card .stats-icon {
+            color: var(--merchant);
+        }
+        
+        .merchant-card:hover .stats-value {
+            color: var(--merchant);
+        }
+        
+        .merchant-actions {
+            display: grid;
+            grid-template-columns: repeat(1, 1fr); /* 移动端单列 */
+            gap: 25px; /* 减小间隙 */
+            margin: 40px 0; /* 减小外边距 */
+        }
+        
+        .merchant-form {
+            background: rgba(255, 255, 255, 0.92);
+            border-radius: 24px;
+            padding: 25px; /* 减小内边距 */
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.7);
+        }
+        
+        .merchant-form h3 {
+            font-size: 1.4rem; /* 减小字体大小 */
+            color: var(--merchant);
+            margin-bottom: 20px; /* 减小下边距 */
+            display: flex;
+            align-items: center;
+            gap: 15px; /* 减小间隙 */
+            font-weight: 800;
+        }
+        
+        .merchant-form h3 i {
+            width: 50px; /* 减小容器大小 */
+            height: 50px;
+            background: rgba(155, 89, 182, 0.1);
+            border-radius: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem; /* 减小图标大小 */
+            color: var(--merchant);
+        }
+        
+        .merchant-form .form-group {
+            margin-bottom: 20px; /* 减小下边距 */
+        }
+        
+        /* ========== 商家窗口切换器 ========== */
+        .merchant-header {
+            display: flex;
+            flex-direction: column; /* 移动端垂直布局 */
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 20px; /* 减小下边距 */
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 24px;
+            padding: 15px; /* 减小内边距 */
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            backdrop-filter: blur(5px);
+            gap: 15px;
+        }
+        
+        .merchant-header h2 {
+            display: flex;
+            align-items: center;
+            gap: 12px; /* 减小间隙 */
+            color: var(--merchant);
+            font-size: 1.4rem; /* 减小字体大小 */
+            font-weight: 800;
+        }
+        
+        .merchant-switcher {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 24px;
+            padding: 12px 20px; /* 减小内边距 */
+            display: flex;
+            flex-direction: column; /* 移动端垂直布局 */
+            align-items: flex-start;
+            gap: 12px; /* 减小间隙 */
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            width: 100%;
+        }
+        
+        .merchant-switcher label {
+            font-weight: 700;
+            color: var(--merchant);
+            font-size: 1rem; /* 减小字体大小 */
+        }
+        
+        .merchant-switcher select {
+            background: rgba(255, 255, 255, 0.95);
+            border: 1px solid rgba(155, 89, 182, 0.3);
+            border-radius: 20px;
+            padding: 10px 15px; /* 减小内边距 */
+            font-size: 0.95rem; /* 减小字体大小 */
+            color: var(--dark);
+            width: 100%;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .merchant-switcher select:focus {
+            outline: none;
+            border-color: var(--merchant);
+            box-shadow: 0 0 0 4px rgba(155, 89, 182, 0.2);
+        }
+        
+        .current-window {
+            background: rgba(155, 89, 182, 0.1);
+            border-radius: 20px;
+            padding: 8px 15px; /* 减小内边距 */
+            font-weight: 700;
+            color: var(--merchant);
+            display: flex;
+            align-items: center;
+            gap: 8px; /* 减小间隙 */
+            font-size: 1rem; /* 减小字体大小 */
+            width: 100%;
+        }
+        
+        /* ========== 动画 ========== */
+        @keyframes float {
+            0%, 100% { transform: translateY(0) translateX(0); }
+            25% { transform: translateY(-15px) translateX(15px); }
+            50% { transform: translateY(10px) translateX(-10px); }
+            75% { transform: translateY(-15px) translateX(-15px); }
+        }
+        
+        @keyframes grow {
+            to {
+                opacity: 1;
+                transform: scaleY(1);
+            }
+        }
+        
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.03); }
+            100% { transform: scale(1); }
+        }
+
+        .pulse {
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* ========== 媒体查询 ========== */
+        @media (min-width: 768px) {
+            body {
+                padding: 20px;
+                font-size: 15px;
+            }
+            
+            h1 {
+                font-size: 2.5rem;
+            }
+            
+            .subtitle {
+                font-size: 1.1rem;
+            }
+            
+            .stats-card {
+                min-width: calc(50% - 10px);
+            }
+            
+            .rec-card {
+                min-width: calc(50% - 10px);
+            }
+            
+            .food-court {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .favorites-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+            
+            .window-options {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .features {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .merchant-stats {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .merchant-actions {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .merchant-header {
+                flex-direction: row;
+                align-items: center;
+            }
+            
+            .merchant-switcher {
+                flex-direction: row;
+                align-items: center;
+                width: auto;
+            }
+        }
+
+        @media (min-width: 992px) {
+            body {
+                font-size: 16px;
+            }
+            
+            h1 {
+                font-size: 3rem;
+            }
+            
+            .stats-card {
+                min-width: calc(33.333% - 15px);
+            }
+            
+            .rec-card {
+                min-width: calc(33.333% - 15px);
+            }
+            
+            .food-court {
+                grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            }
+            
+            .features {
+                grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            }
+            
+            .merchant-stats {
+                grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            }
+            
+            .merchant-actions {
+                grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            }
+        }
+
+        /* ========== Magic模式特效 ========== */
+        .magic-btn {
+            position: absolute;
+            top: 15px; /* 减小位置 */
+            left: 15px;
+            background: linear-gradient(135deg, #6a11cb, #2575fc, #00c6fb, #00ff95);
+            color: white;
+            border: none;
+            padding: 12px 20px; /* 减小内边距 */
+            border-radius: 24px;
+            font-size: 0.95rem; /* 减小字体大小 */
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px; /* 减小间隙 */
+            z-index: 10;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            backdrop-filter: blur(8px);
+        }
+        
+        .magic-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+        }
+        
+        .magic-active {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 999;
+            animation: rainbow-border 3s linear infinite;
+            display: none;
+        }
+        
+        @keyframes rainbow-border {
+            0% { box-shadow: 0 0 0 8px rgba(106, 17, 203, 0.7); }
+            25% { box-shadow: 0 0 0 8px rgba(37, 117, 252, 0.7); }
+            50% { box-shadow: 0 0 0 8px rgba(0, 198, 251, 0.7); }
+            75% { box-shadow: 0 0 0 8px rgba(0, 255, 149, 0.7); }
+            100% { box-shadow: 0 0 0 8px rgba(106, 17, 203, 0.7); }
+        }
+        
+        .jelly-card {
+            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), 
+                        box-shadow 0.3s ease;
+            transform-origin: center;
+            animation: jelly 0.5s ease;
+            border: 1px solid rgba(255,255,255,0.5);
+        }
+        
+        @keyframes jelly {
+            0%, 100% { transform: scale(1); }
+            25% { transform: scale(0.97); }
+            50% { transform: scale(1.03); }
+            75% { transform: scale(0.99); }
+        }
+        
+        .sortable-ghost {
+            opacity: 0.7;
+            transform: scale(0.97);
+            box-shadow: 0 0 15px rgba(255, 99, 71, 0.5);
+        }
+        
+        .sortable-chosen {
+            box-shadow: 0 0 25px rgba(37, 117, 252, 0.6);
+            z-index: 100;
+        }
+
+        /* Magic模式激活时的卡片效果 */
+        .magic-mode .window-card,
+        .magic-mode .rec-card,
+        .magic-mode .stats-card,
+        .magic-mode .feature-card {
+            animation: pulse 2s infinite;
+            border: 2px solid rgba(255,255,255,0.5);
+        }
+    </style>
+</head>
+<body>
+    <!-- 背景模糊元素 -->
+    <div class="bg-blur-element bg-blur-1"></div>
+    <div class="bg-blur-element bg-blur-2"></div>
+    <div class="bg-blur-element bg-blur-3"></div>
+
+    <!-- Magic模式彩虹边框效果 -->
+    <div class="magic-active" id="magicActive"></div>
+
+    <!-- 数据状态提示 -->
+    <div class="data-status" id="dataStatus">
+        <i class="fas fa-check-circle"></i>
+        <span id="statusMessage">评论已保存！</span>
+    </div>
+    
+    <div class="container">
+        <header>
+            <!-- Magic按钮 -->
+            <button class="magic-btn" id="magicBtn">
+                <i class="fas fa-wand-magic-sparkles"></i> Magic
+            </button>
+            
+            <h1><i class="fas fa-utensils"></i> King Of Eaters <i class="fas fa-chart-line"></i></h1>
+            <p class="subtitle">信科食堂实时用餐人数统计系统 - 数据每分钟自动更新</p>
+            
+            <!-- 角色切换 -->
+            <div class="role-switcher">
+                <div class="role-btn user active">
+                    <i class="fas fa-user"></i> 用户端
+                </div>
+                <div class="role-btn merchant">
+                    <i class="fas fa-store"></i> 商家端
+                </div>
+            </div>
+            
+            <!-- 搜索功能 -->
+            <div class="search-container">
+                <input type="text" id="searchInput" class="search-box" placeholder="搜索食堂窗口名称...">
+                <button class="search-btn"><i class="fas fa-search"></i></button>
+            </div>
+            
+            <!-- 更新时间 -->
+            <div class="update-time">
+                最后更新时间: <span id="updateTime">--:--:--</span>
+            </div>
+        </header>
+
+        <!-- 用户端内容 -->
+        <div class="user-section">
+            <div class="dashboard">
+                <div class="stats-card">
+                    <div class="stats-icon">
+                        <i class="fas fa-users"></i>
+                    </div>
+                    <div class="stats-title">当前用餐总人数</div>
+                    <div class="stats-value" id="totalPeople">258人</div>
+                </div>
+                <div class="stats-card">
+                    <div class="stats-icon">
+                        <i class="fas fa-clock"></i>
+                    </div>
+                    <div class="stats-title">五分钟内新增人数</div>
+                    <div class="stats-value" id="fiveMinPeople">92人</div>
+                </div>
+                <div class="stats-card">
+                    <div class="stats-icon">
+                        <i class="fas fa-bolt"></i>
+                    </div>
+                    <div class="stats-title">一分钟内新增人数</div>
+                    <div class="stats-value" id="oneMinPeople">33人</div>
+                </div>
+            </div>
+
+            <!-- "我常吃的"组件 -->
+            <div class="my-favorites">
+                <div class="favorites-title">
+                    <i class="fas fa-heart"></i>
+                    <h2>我常吃的</h2>
+                </div>
+                <div class="favorites-grid" id="favoritesGrid">
+                    <!-- 常吃的窗口将通过JS动态生成 -->
+                    <div class="favorite-slot empty" data-index="0">
+                        <div class="empty-placeholder">
+                            <i class="fas fa-plus-circle"></i>
+                            <span>添加常吃窗口</span>
+                        </div>
+                    </div>
+                    <div class="favorite-slot empty" data-index="1">
+                        <div class="empty-placeholder">
+                            <i class="fas fa-plus-circle"></i>
+                            <span>添加常吃窗口</span>
+                        </div>
+                    </div>
+                    <div class="favorite-slot empty" data-index="2">
+                        <div class="empty-placeholder">
+                            <i class="fas fa-plus-circle"></i>
+                            <span>添加常吃窗口</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 公告区域 -->
+            <div class="announcement">
+                <div class="announce-title">
+                    <i class="fas fa-bullhorn"></i>
+                    <h2>今日公告</h2>
+                </div>
+                <div class="announce-list" id="announcementList">
+                    <div class="announce-card">
+                        <div class="announce-header">
+                            <div class="announce-window">
+                                <i class="fas fa-store"></i> 西式简餐
+                            </div>
+                            <div class="announce-date">2025-07-03</div>
+                        </div>
+                        <div class="announce-content">
+                            今日特惠：所有套餐减2元，欢迎品尝！
+                        </div>
+                    </div>
+                    <div class="announce-card">
+                        <div class="announce-header">
+                            <div class="announce-window">
+                                <i class="fas fa-store"></i> 张亮麻辣烫
+                            </div>
+                            <div class="announce-date">2025-07-03</div>
+                        </div>
+                        <div class="announce-content">
+                            学生特惠：凭学生证享9折优惠！
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 今日推荐区域 -->
+            <div class="recommendation">
+                <div class="rec-title">
+                    <i class="fas fa-crown"></i>
+                    <h2>今日推荐窗口</h2>
+                </div>
+                <p class="rec-subtitle">根据今日用餐总人数推荐的最受欢迎食堂窗口</p>
+                <div class="rec-windows" id="recommendedWindows">
+                    <div class="rec-card" data-id="1">
+                        <div class="rec-rank">1</div>
+                        <div class="rec-name">
+                            <i class="fas fa-utensils"></i> 张亮麻辣烫
+                        </div>
+                        <div class="rec-total">72人</div>
+                        <div class="rec-label">今日用餐总人数</div>
+                        <div class="congestion high-congestion">
+                            拥挤
+                        </div>
+                        <div class="rec-medal gold">
+                            <i class="fas fa-trophy"></i>
+                        </div>
+                    </div>
+                    <div class="rec-card" data-id="2">
+                        <div class="rec-rank">2</div>
+                        <div class="rec-name">
+                            <i class="fas fa-utensils"></i> 武圣羊汤
+                        </div>
+                        <div class="rec-total">58人</div>
+                        <div class="rec-label">今日用餐总人数</div>
+                        <div class="congestion high-congestion">
+                            拥挤
+                        </div>
+                        <div class="rec-medal silver">
+                            <i class="fas fa-medal"></i>
+                        </div>
+                    </div>
+                    <div class="rec-card" data-id="3">
+                        <div class="rec-rank">3</div>
+                        <div class="rec-name">
+                            <i class="fas fa-utensils"></i> 西式简餐
+                        </div>
+                        <div class="rec-total">53人</div>
+                        <div class="rec-label">今日用餐总人数</div>
+                        <div class="congestion medium-congestion">
+                            适中
+                        </div>
+                        <div class="rec-medal bronze">
+                            <i class="fas fa-award"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 功能区域 -->
+            <div class="features">
+                <div class="feature-card">
+                    <h3 class="feature-title"><i class="fas fa-chart-bar"></i> 拥挤度分析</h3>
+                    <div class="feature-content">
+                        <p>系统根据一分钟内刷卡人数自动计算各窗口拥挤程度：</p>
+                        <ul style="margin-top: 15px; padding-left: 20px;">
+                            <li>0-3人: <span class="congestion low-congestion">空闲</span></li>
+                            <li>4-6人: <span class="congestion medium-congestion">适中</span></li>
+                            <li>7人以上: <span class="congestion high-congestion">拥挤</span></li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="feature-card">
+                    <h3 class="feature-title"><i class="fas fa-clock"></i> 用餐高峰期预测</h3>
+                    <div class="feature-content">
+                        <p>根据历史数据，今日用餐高峰期预测如下：</p>
+                        <div class="peak-times">
+                            <div class="time-slot">
+                                <span class="time-label">早餐高峰:</span>
+                                <span class="time-value">7:30 - 8:15</span>
+                            </div>
+                            <div class="time-slot">
+                                <span class="time-label">午餐高峰:</span>
+                                <span class="time-value">11:45 - 12:45</span>
+                            </div>
+                            <div class="time-slot">
+                                <span class="time-label">晚餐高峰:</span>
+                                <span class="time-value">17:30 - 18:30</span>
+                            </div>
+                        </div>
+                        <p style="margin-top: 15px; font-style: italic;">
+                            <i class="fas fa-lightbulb"></i> 建议避开高峰期用餐以减少等待时间
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="food-court-header">
+                <h2><i class="fas fa-store"></i> 所有食堂窗口实时数据</h2>
+            </div>
+
+            <div class="food-court" id="foodCourt">
+                <!-- 窗口卡片 -->
+                <div class="window-card" data-id="1">
+                    <button class="favorite-btn" data-id="1">
+                        <i class="far fa-star"></i>
+                    </button>
+                    <div class="window-image" style="background: linear-gradient(135deg, #ff9a9e 0%, #fad0c4 100%);"></div>
+                    <div class="window-info">
+                        <h3 class="window-name">
+                            <i class="fas fa-utensil-spoon"></i> 西式简餐
+                        </h3>
+                        <div class="window-stats">
+                            <span class="stat-label">五分钟内:</span>
+                            <span class="stat-value">13人</span>
+                        </div>
+                        <div class="window-stats">
+                            <span class="stat-label">一分钟内:</span>
+                            <span class="stat-value">5人</span>
+                        </div>
+                        <div class="window-stats">
+                            <span class="stat-label">今日总人数:</span>
+                            <span class="stat-value">53人</span>
+                        </div>
+                        <div class="window-stats">
+                            <span class="stat-label">拥挤程度:</span>
+                            <span class="stat-value">
+                                <span class="congestion medium-congestion">
+                                    适中
+                                </span>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+                <div class="window-card" data-id="2">
+                    <button class="favorite-btn" data-id="2">
+                        <i class="far fa-star"></i>
+                    </button>
+                    <div class="popular">人气窗口</div>
+                    <div class="window-image" style="background: linear-gradient(135deg, #a1c4fd 0%, #c2e9fb 100%);"></div>
+                    <div class="window-info">
+                        <h3 class="window-name">
+                            <i class="fas fa-utensil-spoon"></i> 武圣羊汤
+                        </h3>
+                        <div class="window-stats">
+                            <span class="stat-label">五分钟内:</span>
+                            <span class="stat-value">15人</span>
+                        </div>
+                        <div class="window-stats">
+                            <span class="stat-label">一分钟内:</span>
+                            <span class="stat-value">9人</span>
+                        </div>
+                        <div class="window-stats">
+                            <span class="stat-label">今日总人数:</span>
+                            <span class="stat-value">58人</span>
+                        </div>
+                        <div class="window-stats">
+                            <span class="stat-label">拥挤程度:</span>
+                            <span class="stat-value">
+                                <span class="congestion high-congestion">
+                                    拥挤
+                                </span>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+                <div class="window-card" data-id="3">
+                    <button class="favorite-btn" data-id="3">
+                        <i class="far fa-star"></i>
+                    </button>
+                    <div class="window-image" style="background: linear-gradient(135deg, #d4fc79 0%, #96e6a1 100%);"></div>
+                    <div class="window-info">
+                        <h3 class="window-name">
+                            <i class="fas fa-utensil-spoon"></i> 醉面
+                        </h3>
+                        <div class="window-stats">
+                            <span class="stat-label">五分钟内:</span>
+                            <span class="stat-value">11人</span>
+                        </div>
+                        <div class="window-stats">
+                            <span class="stat-label">一分钟内:</span>
+                            <span class="stat-value">3人</span>
+                        </div>
+                        <div class="window-stats">
+                            <span class="stat-label">今日总人数:</span>
+                            <span class="stat-value">36人</span>
+                        </div>
+                        <div class="window-stats">
+                            <span class="stat-label">拥挤程度:</span>
+                            <span class="stat-value">
+                                <span class="congestion low-congestion">
+                                    空闲
+                                </span>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+                <div class="window-card" data-id="4">
+                    <button class="favorite-btn" data-id="4">
+                        <i class="far fa-star"></i>
+                    </button>
+                    <div class="popular">人气窗口</div>
+                    <div class="window-image" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);"></div>
+                    <div class="window-info">
+                        <h3 class="window-name">
+                            <i class="fas fa-utensil-spoon"></i> 张亮麻辣烫
+                        </h3>
+                        <div class="window-stats">
+                            <span class="stat-label">五分钟内:</span>
+                            <span class="stat-value">28人</span>
+                        </div>
+                        <div class="window-stats">
+                            <span class="stat-label">一分钟内:</span>
+                            <span class="stat-value">9人</span>
+                        </div>
+                        <div class="window-stats">
+                            <span class="stat-label">今日总人数:</span>
+                            <span class="stat-value">72人</span>
+                        </div>
+                        <div class="window-stats">
+                            <span class="stat-label">拥挤程度:</span>
+                            <span class="stat-value">
+                                <span class="congestion high-congestion">
+                                    拥挤
+                                </span>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+                <div class="window-card" data-id="5">
+                    <button class="favorite-btn" data-id="5">
+                        <i class="far fa-star"></i>
+                    </button>
+                    <div class="window-image" style="background: linear-gradient(135deg, #f6d365 0%, #fda085 100%);"></div>
+                    <div class="window-info">
+                        <h3 class="window-name">
+                            <i class="fas fa-utensil-spoon"></i> 杂粮煎饼
+                        </h3>
+                        <div class="window-stats">
+                            <span class="stat-label">五分钟内:</span>
+                            <span class="stat-value">25人</span>
+                        </div>
+                        <div class="window-stats">
+                            <span class="stat-label">一分钟内:</span>
+                            <span class="stat-value">7人</span>
+                        </div>
+                        <div class="window-stats">
+                            <span class="stat-label">今日总人数:</span>
+                            <span class="stat-value">41人</span>
+                        </div>
+                        <div class="window-stats">
+                            <span class="stat-label">拥挤程度:</span>
+                            <span class="stat-value">
+                                <span class="congestion medium-congestion">
+                                    适中
+                                </span>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 商家端内容 -->
+        <div class="merchant-section">
+            <!-- 商家管理面板 -->
+            <div class="merchant-dashboard" id="merchantDashboard">
+                <div class="merchant-header">
+                    <h2><i class="fas fa-store"></i> 商家管理面板</h2>
+                    <div class="merchant-switcher">
+                        <label for="merchantSelect">切换管理窗口:</label>
+                        <select id="merchantSelect" class="form-control">
+                            <option value="1">西式简餐</option>
+                            <option value="2">武圣羊汤</option>
+                            <option value="3">醉面</option>
+                            <option value="4">张亮麻辣烫</option>
+                            <option value="5">杂粮煎饼</option>
+                        </select>
+                        <div class="current-window">
+                            <i class="fas fa-utensils"></i>
+                            <span id="currentWindowName">西式简餐</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="merchant-welcome">
+                    <h2><i class="fas fa-store"></i> 商家管理面板</h2>
+                    <p>欢迎使用食堂商家管理界面！您可以在这里查看窗口的详细统计数据、管理用户评论以及发布今日特惠公告。</p>
+                </div>
+                
+                <div class="merchant-stats">
+                    <div class="merchant-card">
+                        <div class="stats-icon">
+                            <i class="fas fa-users"></i>
+                        </div>
+                        <div class="stats-title">今日总服务人次</div>
+                        <div class="stats-value" id="merchantTotal">53人</div>
+                    </div>
+                    <div class="merchant-card">
+                        <div class="stats-icon">
+                            <i class="fas fa-star"></i>
+                        </div>
+                        <div class="stats-title">用户评分</div>
+                        <div class="stats-value" id="merchantRating">4.8</div>
+                    </div>
+                </div>
+                
+                <div class="merchant-actions">
+                    <div class="merchant-form">
+                        <h3><i class="fas fa-bullhorn"></i> 发布今日公告</h3>
+                        <div class="form-group">
+                            <label for="merchantNotice">公告内容</label>
+                            <textarea id="merchantNotice" placeholder="请输入今日特惠、新品推荐等信息...">今日特惠：所有套餐减2元，欢迎品尝！</textarea>
+                        </div>
+                        <button class="btn merchant" id="publishNotice">
+                            <i class="fas fa-paper-plane"></i> 发布公告
+                        </button>
+                        <button class="btn" id="deleteNotice" style="background: var(--secondary); box-shadow: 0 4px 15px rgba(231, 76, 60, 0.3); margin-left: 15px;">
+                            <i class="fas fa-trash-alt"></i> 删除公告
+                        </button>
+                    </div>
+                    
+                    <div class="merchant-form">
+                        <h3><i class="fas fa-comments"></i> 评论管理</h3>
+                        <div class="form-group">
+                            <label for="merchantReply">回复评论</label>
+                            <textarea id="merchantReply" placeholder="请选择评论并回复..."></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label>待处理评论 <span id="pendingCount">1</span> 条</label>
+                            <div class="comments-list" id="merchantComments">
+                                <div class="comment" data-id="2">
+                                    <div class="comment-header">
+                                        <div class="comment-author">学生小明</div>
+                                        <div class="comment-date">2025-5-04</div>
+                                    </div>
+                                    <div class="comment-content">价格有点小贵，但味道确实不错，值得一试。</div>
+                                </div>
+                            </div>
+                        </div>
+                        <button class="btn merchant" id="submitReply">
+                            <i class="fas fa-reply"></i> 提交回复
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 窗口选择器模态框 -->
+        <div class="window-selector" id="windowSelector">
+            <div class="selector-content">
+                <span class="close-selector" id="closeSelector">&times;</span>
+                <div class="selector-header">
+                    <h2 class="selector-title">
+                        <i class="fas fa-heart"></i> 选择你常吃的窗口
+                    </h2>
+                    <p class="selector-subtitle">最多可选择3个窗口，点击窗口即可添加到"我常吃的"</p>
+                </div>
+                <div class="window-options" id="windowOptions">
+                    <div class="window-option" data-id="1">
+                        <div class="option-name">
+                            <i class="fas fa-utensils"></i> 西式简餐
+                        </div>
+                        <div class="option-stats">
+                            <span>今日: 53人</span>
+                            <span>五分钟: 13人</span>
+                            <span>一分钟: 5人</span>
+                        </div>
+                        <div class="option-congestion">
+                            <span class="congestion medium-congestion">
+                                适中
+                            </span>
+                        </div>
+                    </div>
+                    <div class="window-option" data-id="2">
+                        <div class="option-name">
+                            <i class="fas fa-utensils"></i> 武圣羊汤
+                        </div>
+                        <div class="option-stats">
+                            <span>今日: 58人</span>
+                            <span>五分钟: 15人</span>
+                            <span>一分钟: 9人</span>
+                        </div>
+                        <div class="option-congestion">
+                            <span class="congestion high-congestion">
+                                拥挤
+                            </span>
+                        </div>
+                    </div>
+                    <div class="window-option" data-id="3">
+                        <div class="option-name">
+                            <i class="fas fa-utensils"></i> 醉面
+                        </div>
+                        <div class="option-stats">
+                            <span>今日: 36人</span>
+                            <span>五分钟: 11人</span>
+                            <span>一分钟: 3人</span>
+                        </div>
+                        <div class="option-congestion">
+                            <span class="congestion low-congestion">
+                                空闲
+                            </span>
+                        </div>
+                    </div>
+                    <div class="window-option" data-id="4">
+                        <div class="option-name">
+                            <i class="fas fa-utensils"></i> 张亮麻辣烫
+                        </div>
+                        <div class="option-stats">
+                            <span>今日: 72人</span>
+                            <span>五分钟: 28人</span>
+                            <span>一分钟: 9人</span>
+                        </div>
+                        <div class="option-congestion">
+                            <span class="congestion high-congestion">
+                                拥挤
+                            </span>
+                        </div>
+                    </div>
+                    <div class="window-option" data-id="5">
+                        <div class="option-name">
+                            <i class="fas fa-utensils"></i> 杂粮煎饼
+                        </div>
+                        <div class="option-stats">
+                            <span>今日: 41人</span>
+                            <span>五分钟: 25人</span>
+                            <span>一分钟: 7人</span>
+                        </div>
+                        <div class="option-congestion">
+                            <span class="congestion medium-congestion">
+                                适中
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="detail-modal" id="detailModal">
+            <div class="modal-content">
+                <span class="close-modal" id="closeModal">&times;</span>
+                <div class="modal-header">
+                    <h2 class="modal-title" id="modalTitle">西式简餐</h2>
+                    <p class="modal-subtitle">实时用餐统计</p>
+                </div>
+                <div class="modal-stats">
+                    <div class="modal-stat">
+                        <span class="modal-stat-label">五分钟内刷卡人数</span>
+                        <span class="modal-stat-value" id="fiveMinValue">13人</span>
+                    </div>
+                    <div class="modal-stat">
+                        <span class="modal-stat-label">一分钟内刷卡人数</span>
+                        <span class="modal-stat-value" id="oneMinValue">5人</span>
+                    </div>
+                    <div class="modal-stat">
+                        <span class="modal-stat-label">今日用餐总人数</span>
+                        <span class="modal-stat-value" id="totalValue">53人</span>
+                    </div>
+                    <div class="modal-stat">
+                        <span class="modal-stat-label">当前拥挤程度</span>
+                        <span class="modal-stat-value" id="congestionValue">适中</span>
+                    </div>
+                </div>
+                <div class="trend-chart">
+                    <div class="chart-title">过去30分钟用餐人数趋势</div>
+                    <div class="bars" id="trendBars">
+                        <div class="bar" style="height: 40px;"><div class="bar-value">4</div><div class="bar-label">25分</div></div>
+                        <div class="bar" style="height: 70px;"><div class="bar-value">7</div><div class="bar-label">20分</div></div>
+                        <div class="bar" style="height: 50px;"><div class="bar-value">5</div><div class="bar-label">15分</div></div>
+                        <div class="bar" style="height: 80px;"><div class="bar-value">8</div><div class="bar-label">10分</div></div>
+                        <div class="bar" style="height: 60px;"><div class="bar-value">6</div><div class="bar-label">5分</div></div>
+                        <div class="bar" style="height: 50px;"><div class="bar-value">5</div><div class="bar-label">当前</div></div>
+                    </div>
+                </div>
+                <div style="margin-top: 20px; text-align: center;">
+                    <button id="favoriteBtn" class="btn">
+                        <i class="far fa-star"></i> 收藏此窗口
+                    </button>
+                </div>
+
+                <!-- 评论区域 -->
+                <div class="comments-section">
+                    <h3 class="comments-title">
+                        <i class="fas fa-comments"></i> 用户评价
+                    </h3>
+                    <div class="comment-form">
+                        <h4>发表评论</h4>
+                        <div class="form-group">
+                            <label for="commentName">昵称</label>
+                            <input type="text" id="commentName" placeholder="请输入您的昵称">
+                        </div>
+                        <div class="form-group">
+                            <label for="commentText">评论内容</label>
+                            <textarea id="commentText" placeholder="请输入您的评论..."></textarea>
+                        </div>
+                        <button class="btn" id="submitComment">
+                            <i class="fas fa-paper-plane"></i> 提交评论
+                        </button>
+                    </div>
+                    <div class="comments-list" id="commentsList">
+                        <div class="comment">
+                            <div class="comment-header">
+                                <div class="comment-author">美食达人</div>
+                                <div class="comment-date">2025-5-05</div>
+                            </div>
+                            <div class="comment-content">非常好吃，强烈推荐！</div>
+                            <div class="comment-reply">商家回复：感谢您的支持，我们会继续努力！</div>
+                        </div>
+                        <div class="comment">
+                            <div class="comment-header">
+                                <div class="comment-author">学生小明</div>
+                                <div class="comment-date">2025-5-04</div>
+                            </div>
+                            <div class="comment-content">价格有点小贵，但味道确实不错，值得一试。</div>
+                            <button class="delete-comment">
+                                <i class="fas fa-trash-alt"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <footer>
+            <p>King Of Eaters 信科食堂用餐统计系统 &copy; 2025 | 数据每分钟自动更新</p>
+            <p style="margin-top: 10px; font-size: 0.9rem; color: #95a5a6;">
+                <i class="fas fa-database"></i> 评论数据已本地保存，刷新页面不会丢失
+            </p>
+        </footer>
+    </div>
+
+    <!-- 数据库状态指示器 -->
+    <div class="db-status" id="dbStatus">
+        <i class="fas fa-database"></i>
+        <span>数据库已连接</span>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // 更新Magic模式功能
+            const magicBtn = document.getElementById('magicBtn');
+            const magicActive = document.getElementById('magicActive');
+            let magicMode = false;
+            
+            // 修复Magic功能
+            magicBtn.addEventListener('click', function() {
+                magicMode = !magicMode;
+                
+                if (magicMode) {
+                    // 激活Magic模式
+                    magicActive.style.display = 'block';
+                    this.innerHTML = '<i class="fas fa-wand-magic-sparkles"></i> 关闭Magic';
+                    this.style.background = 'linear-gradient(135deg, #ff416c, #ff4b2b)';
+                    
+                    // 为卡片添加果冻效果
+                    document.querySelectorAll('.window-card, .rec-card, .stats-card, .feature-card').forEach(card => {
+                        card.classList.add('jelly-card');
+                    });
+                    
+                    // 添加成功提示
+                    showDataStatus('Magic模式已激活！', 'success');
+                    
+                    // 添加拖拽排序功能
+                    initSortable();
+                } else {
+                    // 关闭Magic模式
+                    magicActive.style.display = 'none';
+                    this.innerHTML = '<i class="fas fa-wand-magic-sparkles"></i> Magic';
+                    this.style.background = 'linear-gradient(135deg, #6a11cb, #2575fc, #00c6fb, #00ff95)';
+                    
+                    // 移除卡片果冻效果
+                    document.querySelectorAll('.jelly-card').forEach(card => {
+                        card.classList.remove('jelly-card');
+                    });
+                    
+                    // 销毁拖拽实例
+                    if (window.sortableInstance) {
+                        window.sortableInstance.destroy();
+                    }
+                }
+            });
+            
+            // 初始化拖拽排序功能
+            function initSortable() {
+                const foodCourt = document.getElementById('foodCourt');
+                if (foodCourt) {
+                    window.sortableInstance = new Sortable(foodCourt, {
+                        animation: 350,
+                        easing: "cubic-bezier(0.175, 0.885, 0.32, 1.275)",
+                        ghostClass: "sortable-ghost",
+                        chosenClass: "sortable-chosen",
+                        onStart: () => {
+                            foodCourt.classList.add('jelly-card');
+                        },
+                        onEnd: (evt) => {
+                            foodCourt.classList.remove('jelly-card');
+                            showDataStatus('卡片顺序已保存', 'success');
+                        }
+                    });
+                }
+            }
+            
+            // 显示数据状态提示
+            function showDataStatus(message, type) {
+                const dataStatus = document.getElementById('dataStatus');
+                const statusMessage = document.getElementById('statusMessage');
+                
+                statusMessage.textContent = message;
+                dataStatus.className = `data-status show ${type}`;
+                
+                setTimeout(() => {
+                    dataStatus.classList.remove('show');
+                }, 3000);
+            }
+            
+            // 更新时间显示
+            function updateTimestamp() {
+                const now = new Date();
+                const timeString = now.toTimeString().substring(0, 8);
+                document.getElementById('updateTime').textContent = timeString;
+            }
+            
+            // 初始化时间
+            updateTimestamp();
+            setInterval(updateTimestamp, 1000);
+            
+            // 角色切换功能
+            const roleButtons = document.querySelectorAll('.role-btn');
+            const userSection = document.querySelector('.user-section');
+            const merchantSection = document.querySelector('.merchant-section');
+            
+            roleButtons.forEach(btn => {
+                btn.addEventListener('click', function() {
+                    roleButtons.forEach(b => b.classList.remove('active'));
+                    this.classList.add('active');
+                    
+                    if (this.classList.contains('user')) {
+                        userSection.style.display = 'block';
+                        merchantSection.style.display = 'none';
+                    } else {
+                        userSection.style.display = 'none';
+                        merchantSection.style.display = 'block';
+                    }
+                });
+            });
+            
+            // 模态框控制
+            const detailModal = document.getElementById('detailModal');
+            const closeModal = document.getElementById('closeModal');
+            const windowSelector = document.getElementById('windowSelector');
+            const closeSelector = document.getElementById('closeSelector');
+            
+            closeModal.addEventListener('click', () => {
+                detailModal.classList.remove('active');
+            });
+            
+            closeSelector.addEventListener('click', () => {
+                windowSelector.classList.remove('active');
+            });
+            
+            detailModal.addEventListener('click', (e) => {
+                if (e.target === detailModal) {
+                    detailModal.classList.remove('active');
+                }
+            });
+            
+            windowSelector.addEventListener('click', (e) => {
+                if (e.target === windowSelector) {
+                    windowSelector.classList.remove('active');
+                }
+            });
+            
+            // 窗口卡片点击事件
+            const windowCards = document.querySelectorAll('.window-card, .rec-card');
+            windowCards.forEach(card => {
+                card.addEventListener('click', function() {
+                    const windowId = this.dataset.id;
+                    // 这里可以添加根据ID显示不同内容的逻辑
+                    detailModal.classList.add('active');
+                });
+            });
+            
+            // 收藏按钮功能
+            const favoriteBtns = document.querySelectorAll('.favorite-btn');
+            favoriteBtns.forEach(btn => {
+                btn.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    const icon = this.querySelector('i');
+                    if (icon.classList.contains('far')) {
+                        icon.classList.replace('far', 'fas');
+                        this.classList.add('active');
+                        showDataStatus('已添加到收藏！', 'success');
+                    } else {
+                        icon.classList.replace('fas', 'far');
+                        this.classList.remove('active');
+                        showDataStatus('已从收藏中移除！', 'success');
+                    }
+                });
+            });
+            
+            // 添加常吃窗口功能
+            const favoriteSlots = document.querySelectorAll('.favorite-slot.empty');
+            favoriteSlots.forEach(slot => {
+                slot.addEventListener('click', function() {
+                    windowSelector.classList.add('active');
+                });
+            });
+            
+            // 窗口选择功能
+            const windowOptions = document.querySelectorAll('.window-option:not(.disabled)');
+            windowOptions.forEach(option => {
+                option.addEventListener('click', function() {
+                    // 这里可以添加选择窗口后的逻辑
+                    windowSelector.classList.remove('active');
+                    
+                    // 临时效果：显示添加成功的反馈
+                    const slotIndex = 0; // 这里应该根据实际情况设置
+                    const slot = document.querySelector(`.favorite-slot[data-index="${slotIndex}"]`);
+                    slot.classList.remove('empty');
+                    slot.classList.add('filled');
+                    slot.innerHTML = `
+                        <button class="remove-favorite" data-index="${slotIndex}">
+                            <i class="fas fa-times"></i>
+                        </button>
+                        <div class="favorite-window">
+                            <div class="favorite-window-name">
+                                <i class="fas fa-utensils"></i> ${this.querySelector('.option-name').textContent.trim()}
+                            </div>
+                            <div class="favorite-window-stats">
+                                今日总人数: ${this.querySelector('.option-stats span:first-child').textContent.split(': ')[1]}
+                            </div>
+                            <div class="favorite-congestion ${this.querySelector('.congestion').className}">
+                                ${this.querySelector('.congestion').textContent}
+                            </div>
+                        </div>
+                    `;
+                    
+                    // 添加移除按钮事件
+                    slot.querySelector('.remove-favorite').addEventListener('click', function(e) {
+                        e.stopPropagation();
+                        slot.classList.remove('filled');
+                        slot.classList.add('empty');
+                        slot.innerHTML = `
+                            <div class="empty-placeholder">
+                                <i class="fas fa-plus-circle"></i>
+                                <span>添加常吃窗口</span>
+                            </div>
+                        `;
+                    });
+                });
+            });
+            
+            // 搜索功能
+            const searchInput = document.getElementById('searchInput');
+            const searchBtn = document.querySelector('.search-btn');
+            
+            function filterWindows(query) {
+                const cards = document.querySelectorAll('.window-card');
+                const normalizedQuery = query.toLowerCase().trim();
+                
+                cards.forEach(card => {
+                    const name = card.querySelector('.window-name').textContent.toLowerCase();
+                    if (name.includes(normalizedQuery)) {
+                        card.classList.remove('hidden');
+                    } else {
+                        card.classList.add('hidden');
+                    }
+                });
+            }
+            
+            searchInput.addEventListener('input', () => filterWindows(searchInput.value));
+            searchBtn.addEventListener('click', () => filterWindows(searchInput.value));
+            searchInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    filterWindows(searchInput.value);
+                }
+            });
+            
+            // 商家端功能
+            const merchantSelect = document.getElementById('merchantSelect');
+            const currentWindowName = document.getElementById('currentWindowName');
+            
+            merchantSelect.addEventListener('change', function() {
+                const selectedOption = this.options[this.selectedIndex];
+                currentWindowName.textContent = selectedOption.text;
+            });
+            
+            // 商家发布公告功能
+            const publishNotice = document.getElementById('publishNotice');
+            publishNotice.addEventListener('click', function() {
+                const notice = document.getElementById('merchantNotice').value;
+                if (notice.trim() !== '') {
+                    showDataStatus('公告已发布！', 'success');
+                } else {
+                    alert('请输入公告内容');
+                }
+            });
+            
+            // 商家回复评论功能
+            const submitReply = document.getElementById('submitReply');
+            submitReply.addEventListener('click', function() {
+                const reply = document.getElementById('merchantReply').value;
+                if (reply.trim() !== '') {
+                    showDataStatus('回复已提交！', 'success');
+                    document.getElementById('merchantReply').value = '';
+                } else {
+                    alert('请输入回复内容');
+                }
+            });
+            
+            // 删除公告功能
+            const deleteNotice = document.getElementById('deleteNotice');
+            deleteNotice.addEventListener('click', function() {
+                if (confirm('确定要删除当前公告吗？')) {
+                    document.getElementById('merchantNotice').value = '';
+                    showDataStatus('公告已删除！', 'success');
+                }
+            });
+            
+            // 提交评论功能
+            const submitComment = document.getElementById('submitComment');
+            submitComment.addEventListener('click', function() {
+                const name = document.getElementById('commentName').value;
+                const text = document.getElementById('commentText').value;
+                
+                if (name.trim() === '' || text.trim() === '') {
+                    alert('请填写昵称和评论内容');
+                    return;
+                }
+                
+                // 模拟添加到评论列表
+                const commentsList = document.getElementById('commentsList');
+                const newComment = document.createElement('div');
+                newComment.className = 'comment';
+                newComment.innerHTML = `
+                    <div class="comment-header">
+                        <div class="comment-author">${name}</div>
+                        <div class="comment-date">${new Date().toISOString().split('T')[0]}</div>
+                    </div>
+                    <div class="comment-content">${text}</div>
+                    <button class="delete-comment">
+                        <i class="fas fa-trash-alt"></i>
+                    </button>
+                `;
+                
+                commentsList.prepend(newComment);
+                
+                // 清空表单
+                document.getElementById('commentText').value = '';
+                
+                // 显示成功提示
+                showDataStatus('评论已提交！', 'success');
+            });
+            
+            // 删除评论功能
+            document.addEventListener('click', function(e) {
+                if (e.target.closest('.delete-comment')) {
+                    if (confirm('确定要删除这条评论吗？')) {
+                        e.target.closest('.comment').remove();
+                        showDataStatus('评论已删除！', 'success');
+                    }
+                }
+            });
+            
+            // 移除常吃窗口功能
+            document.addEventListener('click', function(e) {
+                if (e.target.closest('.remove-favorite')) {
+                    const slot = e.target.closest('.favorite-slot');
+                    slot.classList.remove('filled');
+                    slot.classList.add('empty');
+                    slot.innerHTML = `
+                        <div class="empty-placeholder">
+                            <i class="fas fa-plus-circle"></i>
+                            <span>添加常吃窗口</span>
+                        </div>
+                    `;
+                    showDataStatus('已从常吃窗口移除！', 'success');
+                }
+            });
+        });
+    </script>
+</body>
+</html>
